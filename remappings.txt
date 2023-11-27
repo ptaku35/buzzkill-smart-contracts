@@ -1,0 +1,2 @@
+@openzeppelin-contracts/=lib/openzeppelin-contracts/
+@vrc725/contracts/=lib/vrc725/contracts/

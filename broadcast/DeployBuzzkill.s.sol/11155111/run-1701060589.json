@@ -1,0 +1,38 @@
+{
+  "transactions": [
+    {
+      "hash": "0x8c1f1e8411cc2fe6e8c5ced2bc2c92b12d9c48348132de2f55b3f79774444b10",
+      "transactionType": "CREATE",
+      "contractName": "Sample",
+      "contractAddress": "0xB149531432020DD20d6d052592a20364f7D5d642",
+      "function": null,
+      "arguments": null,
+      "transaction": {
+        "type": "0x02",
+        "from": "0xea2c53fa30187403a249bd0ab970ddec16ba2cb4",
+        "gas": "0x1dccc",
+        "value": "0x0",
+        "data": "0x608060405234801561001057600080fd5b506000805560b1806100236000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c80633fb5c1cb1460375780638381f58a146049575b600080fd5b604760423660046063565b600055565b005b605160005481565b60405190815260200160405180910390f35b600060208284031215607457600080fd5b503591905056fea264697066735822122032073ba071decabd7ad3634b520ea998fd766e8f0e09a010492e344c140757a164736f6c63430008170033",
+        "nonce": "0xd",
+        "accessList": []
+      },
+      "additionalContracts": [],
+      "isFixedGasLimit": false
+    }
+  ],
+  "receipts": [],
+  "libraries": [],
+  "pending": [
+    "0x8c1f1e8411cc2fe6e8c5ced2bc2c92b12d9c48348132de2f55b3f79774444b10"
+  ],
+  "returns": {
+    "sample": {
+      "internal_type": "contract Sample",
+      "value": "0xB149531432020DD20d6d052592a20364f7D5d642"
+    }
+  },
+  "timestamp": 1701060589,
+  "chain": 11155111,
+  "multi": false,
+  "commit": null
+}
