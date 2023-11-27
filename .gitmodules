@@ -1,3 +1,6 @@
 [submodule "lib/openzeppelin-contracts"]
 	path = lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "lib/vrc725"]
+	path = lib/vrc725
+	url = https://github.com/BuildOnViction/vrc725
