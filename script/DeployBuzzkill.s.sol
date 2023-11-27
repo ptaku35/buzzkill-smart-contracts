@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import {Script} from "forge-std/Script.sol";
+import {Script} from "lib/forge-std/src/Script.sol";
 
 import {Buzzkill} from "src/Buzzkill.sol";
 
-import {Sample} from "../src/Sample.sol";
 
 contract DeployBuzzkill is Script {
     // string public constant TOKENURI =
@@ -19,15 +18,5 @@ contract DeployBuzzkill is Script {
         vm.startBroadcast(deployerPrivateKey);
         buzzkill = new Buzzkill();
         vm.stopBroadcast();
-    }
-}
-
-contract DeploySample is Script {
-    function run() external returns (Sample sample) {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-
-        vm.startBroadcast(deployerPrivateKey);
-        sample = new Sample();
-        vm.stopBroadcast;
     }
 }

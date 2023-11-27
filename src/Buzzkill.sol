@@ -3,23 +3,42 @@ pragma solidity ^0.8.23;
 
 import {VRC725} from "@vrc725/contracts/VRC725.sol";
 
+error MintPriceNotPaid();
+error MaxSupply();
+error WithdrawTransfer();
 
 contract Buzzkill is VRC725 {
-    uint256 private _nextTokenId;
 
-    // Mapping from tokenId's to token URIs
-    mapping(uint256 tokenId => string) private tokenIdToTokenURI;
-
-    event MetadataUpdate(uint256);
+    uint256 private currentTokenId;
+    uint256 public constant TOTAL_SUPPLY = 10_000;
+    uint256 public constant MINT_PRICE = 0.0073 ether;
 
     constructor() {
         __VRC725_init("Buzzkill", "BZK", msg.sender);
     }
 
-    function safeMint(address to, string memory uri) public onlyOwner {
-        uint256 tokenId = _nextTokenId++;
-        _safeMint(to, tokenId);
-        _setTokenURI(tokenId, uri);
+    function mintTo(address to) public payable onlyOwner {
+        if (msg.value != MINT_PRICE) {
+            revert MintPriceNotPaid();
+        }
+        uint256 newTokenId = ++currentTokenId;
+
+        if (newTokenId > TOTAL_SUPPLY) {
+            revert MaxSupply();
+        }
+        _safeMint(to, newTokenId);
+    }
+
+    function _baseURI() internal pure override returns (string memory) {
+        return "ipfs://<SOME HASH HERE>/";
+    }
+
+    function withdrawPayments(address payable payee) external onlyOwner {
+        uint256 balance = address(this).balance;
+        (bool transferTx, ) = payee.call{value: balance}("");
+        if (!transferTx) {
+            revert WithdrawTransfer();
+        }
     }
 
     /**
@@ -35,48 +54,5 @@ contract Buzzkill is VRC725 {
 
         // Ensure the fee is at least 1 (you can adjust this based on your requirements)
         return percentageFee > 1 ? percentageFee : 1;
-    }
-
-    /**
-     * @dev See {IERC721Metadata-tokenURI}.
-     */
-    function tokenURI(
-        uint256 tokenId
-    ) public view override returns (string memory) {
-        _requireOwned(tokenId);
-
-        string memory _tokenURI = tokenIdToTokenURI[tokenId];
-        string memory base = _baseURI();
-
-        // If there is no base URI, return the token URI.
-        if (bytes(base).length == 0) {
-            return _tokenURI;
-        }
-        // If both are set, concatenate the baseURI and tokenURI (via string.concat).
-        if (bytes(_tokenURI).length > 0) {
-            return string.concat(base, _tokenURI);
-        }
-
-        return super.tokenURI(tokenId);
-    }
-
-    function _baseURI() internal pure override returns (string memory) {
-        return "ipfs://";
-    }
-
-    function _requireOwned(uint256 tokenId) internal view returns (address) {
-        address owner = _ownerOf(tokenId);
-        if (owner == address(0)) {
-            revert("Nonexistent token");
-        }
-        return owner;
-    }
-
-    function _setTokenURI(
-        uint256 tokenId,
-        string memory _tokenURI
-    ) internal virtual {
-        tokenIdToTokenURI[tokenId] = _tokenURI;
-        emit MetadataUpdate(tokenId);
     }
 }
