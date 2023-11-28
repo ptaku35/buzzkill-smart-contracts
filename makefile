@@ -1,6 +1,6 @@
 -include .env
 
-.PHONY: all test clean deploy fund help install snapshot format anvil deployBuzzkill deploySample
+.PHONY: all test clean deploy fund help install snapshot format anvil deployBuzzkill
 
 DEFAULT_ANVIL_KEY := 0x0
 
@@ -46,10 +46,9 @@ endif
 deployBuzzkill:
 	@forge script script/DeployBuzzkill.s.sol:DeployBuzzkill $(NETWORK_ARGS)
 
-deploySample:
-	@forge script script/DeployBuzzkill.s.sol:DeploySample $(NETWORK_ARGS)
-
 mint:
 	@forge script script/Interactions.s.sol:MintBasicNft $(NETWORK_ARGS)
 
-# forge script script/DeployBuzzkill.s.sol:DeployBuzzkill --rpc-url $TOMO_RPC_URL --private-key $PRIVATE_KEY --legacy --broadcast --verify --etherscan-api-key cf88cb058073ed109f2d9739332293b0eb96a174564a31135e0baf6103a47257 -vvvv
+# These two commands are the exact same:
+# $ forge script script/DeployBuzzkill.s.sol:DeployBuzzkill --rpc-url $TOMO_RPC_URL --private-key $PRIVATE_KEY --legacy --broadcast --verify --etherscan-api-key $(VICTION_API_KEY) -vvvv
+# $ make deployBuzzkill ARGS="--network tomochain"
