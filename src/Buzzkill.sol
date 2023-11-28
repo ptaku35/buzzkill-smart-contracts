@@ -2,14 +2,15 @@
 pragma solidity ^0.8.17;
 
 import {VRC725} from "@vrc725/contracts/VRC725.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol"; // Just a placeholder in case staking is done in this contract
 import {Pausable} from "@openzeppelin-contracts/contracts/utils/Pausable.sol";
+import {VRC725Enumerable} from "@vrc725/contracts/extensions/VRC725Enumerable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol"; // Just a placeholder in case staking is done in this contract
 
 error MintPriceNotPaid();
 error MaxSupply();
 error WithdrawTransfer();
 
-contract Buzzkill is VRC725, ReentrancyGuard, Pausable {
+contract Buzzkill is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     uint256 private currentTokenId;
     uint256 public constant TOTAL_SUPPLY = 10_000;
     uint256 public constant MINT_PRICE = 0.007 ether; //? Not sure about having this constant
@@ -30,6 +31,11 @@ contract Buzzkill is VRC725, ReentrancyGuard, Pausable {
         _safeMint(to, newTokenId);
         return newTokenId;
     }
+    
+    function burn(uint256 tokenId) public onlyOwner {
+        require(_exists(tokenId), "Token does not exist");
+        _burn(tokenId);
+    }
 
     function _baseURI() internal pure override returns (string memory) {
         return "ipfs://<SOME HASH HERE>/";
@@ -43,10 +49,6 @@ contract Buzzkill is VRC725, ReentrancyGuard, Pausable {
         }
     }
 
-    function burn(uint256 tokenId) public onlyOwner {
-        require(_exists(tokenId), "Token does not exist");
-        _burn(tokenId);
-    }
 
     /**
      * @dev Required override from VRC725.
@@ -61,5 +63,22 @@ contract Buzzkill is VRC725, ReentrancyGuard, Pausable {
 
         // Ensure the fee is at least 1 (you can adjust this based on your requirements)
         return percentageFee > 1 ? percentageFee : 1;
+    }
+
+    // The following functions are overrides required by Solidity.
+
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(VRC725, VRC725Enumerable) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 firstTokenId,
+        uint256 batchSize
+    ) internal virtual override(VRC725, VRC725Enumerable) {
+        super._beforeTokenTransfer(from, to, firstTokenId, batchSize);
     }
 }
