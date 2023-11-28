@@ -1,23 +1,24 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.17;
 
 import {VRC725} from "@vrc725/contracts/VRC725.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol"; // Just a placeholder in case staking is done in this contract
+import {Pausable} from "@openzeppelin-contracts/contracts/utils/Pausable.sol";
 
 error MintPriceNotPaid();
 error MaxSupply();
 error WithdrawTransfer();
 
-contract Buzzkill is VRC725 {
-
+contract Buzzkill is VRC725, ReentrancyGuard, Pausable {
     uint256 private currentTokenId;
     uint256 public constant TOTAL_SUPPLY = 10_000;
-    uint256 public constant MINT_PRICE = 0.0073 ether;
+    uint256 public constant MINT_PRICE = 0.007 ether; //? Not sure about having this constant
 
     constructor() {
         __VRC725_init("Buzzkill", "BZK", msg.sender);
     }
 
-    function mintTo(address to) public payable onlyOwner {
+    function mintTo(address to) public payable whenNotPaused returns (uint256) {
         if (msg.value != MINT_PRICE) {
             revert MintPriceNotPaid();
         }
@@ -27,6 +28,7 @@ contract Buzzkill is VRC725 {
             revert MaxSupply();
         }
         _safeMint(to, newTokenId);
+        return newTokenId;
     }
 
     function _baseURI() internal pure override returns (string memory) {
@@ -39,6 +41,11 @@ contract Buzzkill is VRC725 {
         if (!transferTx) {
             revert WithdrawTransfer();
         }
+    }
+
+    function burn(uint256 tokenId) public onlyOwner {
+        require(_exists(tokenId), "Token does not exist");
+        _burn(tokenId);
     }
 
     /**
