@@ -22,7 +22,7 @@ contract Buzzkill is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     function mintTo(
         address to
     ) public payable whenNotPaused nonReentrant returns (uint256) {
-        if (msg.value != MINT_PRICE) {
+        if (msg.value >= MINT_PRICE) {
             revert MintPriceNotPaid();
         }
         uint256 newTokenId = ++currentTokenId;
