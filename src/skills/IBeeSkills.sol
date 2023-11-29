@@ -35,10 +35,13 @@ interface IBeeSkills {
         // return beeSkills struct
 
     function upgradeAttack(uint256 tokenId, address honeyTokenAddress, address nftAddress) external;
+        // Check initializedSkills is true
 
     function upgradeDefense(uint256 tokenId, address honeyTokenAddress, address nftAddress) external;
+        // Check initializedSkills is true
 
     function upgradeForaging(uint256 tokenId, address honeyTokenAddress, address nftAddress) external;
+        // Check initializedSkills is true
 
     function cooldownStatus(uint256 tokenId) external;
 }
