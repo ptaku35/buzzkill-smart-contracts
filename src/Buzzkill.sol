@@ -2,9 +2,9 @@
 pragma solidity ^0.8.17;
 
 import {VRC725} from "@vrc725/contracts/VRC725.sol";
-import {VRC725Enumerable} from "@vrc725/contracts/extensions/VRC725Enumerable.sol";
 import {Pausable} from "@openzeppelin-contracts/contracts/utils/Pausable.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {VRC725Enumerable} from "@vrc725/contracts/extensions/VRC725Enumerable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol"; 
 
 error MintPriceNotPaid();
 error MaxSupply();
@@ -22,7 +22,7 @@ contract Buzzkill is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     function mintTo(
         address to
     ) public payable whenNotPaused nonReentrant returns (uint256) {
-        if (msg.value >= MINT_PRICE) {
+        if (msg.value != MINT_PRICE) {
             revert MintPriceNotPaid();
         }
         uint256 newTokenId = ++currentTokenId;

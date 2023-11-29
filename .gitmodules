@@ -13,3 +13,6 @@
 [submodule "lib/vrc725"]
 	path = lib/vrc725
 	url = https://github.com/BuildOnViction/vrc725
+[submodule "lib/vrc25"]
+	path = lib/vrc25
+	url = https://github.com/BuildOnViction/vrc25
