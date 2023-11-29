@@ -13,6 +13,11 @@ contract BuzzkillTest is Test {
         buzzkill = new Buzzkill();
     }
 
+//! Check Solmate repo for more tests.  Check Patrick repo too: https://github.com/Cyfrin/foundry-nft-f23/blob/main/test/BasicNftTest.t.sol
+
+//! Can also write a few tests then put the format in ChatGPT and ask it to write more tests. 
+//! Check this repo for a ChatGPT prompt example: https://github.com/Cyfrin/foundry-erc20-f23/blob/main/chatGPT_prompt.txt
+
     function test_NameIsCorrect() public view {
         string memory expectedName = "Buzzkill";
         string memory actualName = buzzkill.name();

@@ -2,9 +2,9 @@
 pragma solidity ^0.8.17;
 
 import {VRC725} from "@vrc725/contracts/VRC725.sol";
-import {Pausable} from "@openzeppelin-contracts/contracts/utils/Pausable.sol";
 import {VRC725Enumerable} from "@vrc725/contracts/extensions/VRC725Enumerable.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol"; // Just a placeholder in case staking is done in this contract
+import {Pausable} from "@openzeppelin-contracts/contracts/utils/Pausable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 error MintPriceNotPaid();
 error MaxSupply();
@@ -19,7 +19,9 @@ contract Buzzkill is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
         __VRC725_init("Buzzkill", "BZK", msg.sender);
     }
 
-    function mintTo(address to) public payable whenNotPaused returns (uint256) {
+    function mintTo(
+        address to
+    ) public payable whenNotPaused nonReentrant returns (uint256) {
         if (msg.value != MINT_PRICE) {
             revert MintPriceNotPaid();
         }
@@ -31,7 +33,7 @@ contract Buzzkill is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
         _safeMint(to, newTokenId);
         return newTokenId;
     }
-    
+
     function burn(uint256 tokenId) public onlyOwner {
         require(_exists(tokenId), "Token does not exist");
         _burn(tokenId);
@@ -41,14 +43,15 @@ contract Buzzkill is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
         return "ipfs://<SOME HASH HERE>/";
     }
 
-    function withdrawPayments(address payable payee) external onlyOwner {
+    function withdrawPayments(
+        address payable payee
+    ) external onlyOwner nonReentrant {
         uint256 balance = address(this).balance;
         (bool transferTx, ) = payee.call{value: balance}("");
         if (!transferTx) {
             revert WithdrawTransfer();
         }
     }
-
 
     /**
      * @dev Required override from VRC725.
