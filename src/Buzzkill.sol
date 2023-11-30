@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {VRC725} from "@vrc725/contracts/VRC725.sol";
 import {Pausable} from "@openzeppelin-contracts/contracts/utils/Pausable.sol";
 import {VRC725Enumerable} from "@vrc725/contracts/extensions/VRC725Enumerable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-
 contract Buzzkill is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
-
     ////////////////////////
     /// ERRORS
     ////////////////////////
@@ -40,8 +38,6 @@ contract Buzzkill is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
             revert MaxSupply();
         }
         _safeMint(to, newTokenId);
-
-        // Maybe need some logic to give users $honey when minting an NFT
 
         return newTokenId;
     }
