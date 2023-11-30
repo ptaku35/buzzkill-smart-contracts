@@ -67,13 +67,8 @@ contract Buzzkill is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
      * @dev Required override from VRC725.
      * *! Need to appropriately implement function
      */
-    function _estimateFee(uint256 value) internal pure override returns (uint256) {
-        // Need to implement this function to prevent "abstract" error
-        // This is just an example implementation of a fixed fee of 1% of the transaction value
-        uint256 percentageFee = (value * 1) / 100;
-
-        // Ensure the fee is at least 1 (you can adjust this based on your requirements)
-        return percentageFee > 1 ? percentageFee : 1;
+    function _estimateFee(uint256) internal view override returns (uint256) {
+        return minFee();
     }
 
     // The following functions are overrides required by Solidity.
