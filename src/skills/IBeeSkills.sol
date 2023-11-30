@@ -4,13 +4,18 @@ pragma solidity ^0.8.17;
 
 interface IBeeSkills {
 
-    enum Environments {
-        volcano,
-        ice,
-        desert,
-        grass,
-        river
-    }
+    ////////////////////////
+    /// STATE VARIABLES 
+    ////////////////////////
+
+    // May leave NFT environments for later
+    // enum Environments {
+    //     volcano,
+    //     ice,
+    //     desert,
+    //     grass,
+    //     river
+    // }
 
     struct beeSkills {
         bool initializedSkills;
@@ -21,15 +26,27 @@ interface IBeeSkills {
         uint256 cooldownEndTime;
         uint256 timeLastUpgraded;
         uint256 foraging;
-        Environments environment;
+        // Environments environment;
     }
 
     //mapping(uint246 tokenId => beeSkills) tokenIdToBeeSkills;
 
+    ////////////////////////
+    /// EVENTS
+    ////////////////////////
+
     event BeeSkillUpgraded(uint256 tokeId);
     event CoolDownStarted();
 
+    ////////////////////////
+    /// MODIFIERS
+    ////////////////////////
+
     // modifier onlyTokenOwner;
+
+    ////////////////////////
+    /// FUNCTIONS
+    ////////////////////////
 
     function getBeeSkillsFromTokenId(uint256 tokenId) external;
         // return beeSkills struct

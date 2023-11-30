@@ -6,19 +6,30 @@ import {Pausable} from "@openzeppelin-contracts/contracts/utils/Pausable.sol";
 import {VRC725Enumerable} from "@vrc725/contracts/extensions/VRC725Enumerable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-error MintPriceNotPaid();
-error MaxSupply();
-error WithdrawTransfer();
 
 contract Buzzkill is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
+
+    ////////////////////////
+    /// ERRORS
+    ////////////////////////
+    error MintPriceNotPaid();
+    error MaxSupply();
+    error WithdrawTransfer();
+
+    ////////////////////////
+    /// STATE VARIABLES
+    ////////////////////////
     uint256 private currentTokenId;
     uint256 public constant TOTAL_SUPPLY = 10_000;
-    uint256 public constant MINT_PRICE = 0.007 ether; //? Not sure about having this constant
+    uint256 public constant MINT_PRICE = 0.007 ether; //? Not sure about having this a hard coded constant
 
     constructor() {
         __VRC725_init("Buzzkill", "BZK", msg.sender);
     }
 
+    ////////////////////////
+    /// FUNCTIONS
+    ////////////////////////
     function mintTo(address to) public payable whenNotPaused nonReentrant returns (uint256) {
         if (msg.value != MINT_PRICE) {
             revert MintPriceNotPaid();
