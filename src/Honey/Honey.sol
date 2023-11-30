@@ -8,7 +8,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 contract Honey is VRC25, VRC25Permit, ReentrancyGuard {
     error ExceededMaxSupply();
 
-    uint256 public constant MAX_SUPPLY = 10e9;
+    uint256 public constant MAX_SUPPLY = 10e9 * 10e18;
 
     constructor() VRC25("HONEY", "HNY", 18) {}
 
