@@ -6,7 +6,7 @@ import {Pausable} from "@openzeppelin-contracts/contracts/utils/Pausable.sol";
 import {VRC725Enumerable} from "@vrc725/contracts/extensions/VRC725Enumerable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-contract Buzzkill is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
+contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     ////////////////////////
     /// ERRORS
     ////////////////////////
