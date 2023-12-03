@@ -19,17 +19,18 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     ////////////////////////
     uint256 private currentTokenId;
     uint256 public constant TOTAL_SUPPLY = 10_000;
-    uint256 public constant MINT_PRICE = 0.007 ether; //? Not sure about having this a hard coded constant
+    uint256 public mintPrice; //? Not sure about having this a hard coded constant
 
-    constructor() {
+    constructor(uint256 _mintPrice) {
         __VRC725_init("Buzzkill", "BZK", msg.sender);
+        mintPrice = _mintPrice;
     }
 
     ////////////////////////
     /// FUNCTIONS
     ////////////////////////
     function mintTo(address to) public payable whenNotPaused nonReentrant returns (uint256) {
-        if (msg.value != MINT_PRICE) {
+        if (msg.value != mintPrice) {
             revert MintPriceNotPaid();
         }
         uint256 newTokenId = ++currentTokenId;
@@ -57,6 +58,11 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
         if (!transferTx) {
             revert WithdrawTransfer();
         }
+    }
+
+    function UpdateMintPrice(uint256 newMintPrice) external onlyOwner nonReentrant returns (bool) {
+        mintPrice = newMintPrice;
+        return true;
     }
 
     /**
