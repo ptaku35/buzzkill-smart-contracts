@@ -19,7 +19,7 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     ////////////////////////
     uint256 private currentTokenId;
     uint256 public constant TOTAL_SUPPLY = 10_000;
-    uint256 public mintPrice; //? Not sure about having this a hard coded constant
+    uint256 public mintPrice;
 
     constructor(uint256 _mintPrice) {
         __VRC725_init("Buzzkill", "BZK", msg.sender);
@@ -29,6 +29,7 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     ////////////////////////
     /// FUNCTIONS
     ////////////////////////
+    //??? Considering adding a uint256 parameter so the user has the option to purchase as many as they want
     function mintTo(address to) public payable whenNotPaused nonReentrant returns (uint256) {
         if (msg.value != mintPrice) {
             revert MintPriceNotPaid();
@@ -60,6 +61,10 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
         }
     }
 
+    /**
+     * @notice Updates the new price of minting a NFT
+     * @param newMintPrice New price to mint a NFT
+     */
     function UpdateMintPrice(uint256 newMintPrice) external onlyOwner nonReentrant returns (bool) {
         mintPrice = newMintPrice;
         return true;
@@ -67,7 +72,6 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
 
     /**
      * @dev Required override from VRC725.
-     * *! Need to appropriately implement function
      */
     function _estimateFee(uint256) internal view override returns (uint256) {
         return minFee();

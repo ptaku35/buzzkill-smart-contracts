@@ -2,15 +2,15 @@
 pragma solidity ^0.8.23;
 
 import {Test} from "lib/forge-std/src/Test.sol";
-import {Buzzkill} from "../src/Buzzkill.sol";
+import {BuzzkillNFT} from "../src/BuzzkillNFT.sol";
 
 contract BuzzkillTest is Test {
-    Buzzkill private buzzkill;
+    BuzzkillNFT private buzzkill;
 
     address USER = makeAddr("user");
 
     function setUp() public {
-        buzzkill = new Buzzkill();
+        buzzkill = new BuzzkillNFT(0.0073 ether);
     }
 
 //! Check Solmate repo for more tests.  Check Patrick repo too: https://github.com/Cyfrin/foundry-nft-f23/blob/main/test/BasicNftTest.t.sol
