@@ -7,23 +7,23 @@ import {VRC725Enumerable} from "@vrc725/contracts/extensions/VRC725Enumerable.so
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
-    ////////////////////////
-    /// ERRORS
-    ////////////////////////
+    /* -------------------------------------*/
+    //* ERRORS
+    /* -------------------------------------*/
     error MintPriceNotPaid();
     error MaxSupply();
     error WithdrawTransfer();
 
-    ////////////////////////
-    /// STATE VARIABLES
-    ////////////////////////
+    /* -------------------------------------*/
+    //* STATE VARIABLES
+    /* -------------------------------------*/
     uint256 private currentTokenId;
     uint256 public constant TOTAL_SUPPLY = 10_000;
     uint256 public mintPrice;
 
-    ////////////////////////
-    /// FUNCTIONS
-    ////////////////////////
+    /* -------------------------------------*/
+    //* FUNCTIONS
+    /* -------------------------------------*/
     constructor(uint256 _mintPrice) {
         __VRC725_init("Buzzkill", "BZK", msg.sender);
         mintPrice = _mintPrice;
