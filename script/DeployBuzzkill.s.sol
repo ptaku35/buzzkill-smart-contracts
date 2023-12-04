@@ -7,8 +7,6 @@ import {BuzzkillNFT} from "src/NFT/BuzzkillNFT.sol";
 
 
 contract DeployBuzzkill is Script {
-    // string public constant TOKENURI =
-    //     "ipfs://bafybeig37ioir76s7mg5oobetncojcm3c3hxasyd4rvid4jqhy4gkaheg4/?filename=0-PUG.json";
 
     /// @notice The main script entrypoint
     /// @return buzzkill The deployed contract
