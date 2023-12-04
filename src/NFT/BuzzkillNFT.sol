@@ -21,53 +21,52 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     uint256 public constant TOTAL_SUPPLY = 10_000;
     uint256 public mintPrice;
 
+    ////////////////////////
+    /// FUNCTIONS
+    ////////////////////////
     constructor(uint256 _mintPrice) {
         __VRC725_init("Buzzkill", "BZK", msg.sender);
         mintPrice = _mintPrice;
     }
 
-    ////////////////////////
-    /// FUNCTIONS
-    ////////////////////////
     //??? Considering adding a uint256 parameter so the user has the option to purchase as many as they want
-    function mintTo(address to) public payable whenNotPaused nonReentrant returns (uint256) {
-        if (msg.value != mintPrice) {
-            revert MintPriceNotPaid();
-        }
+    function mintTo(address to) external payable whenNotPaused nonReentrant returns (uint256) {
+        if (msg.value != mintPrice) revert MintPriceNotPaid();
+
         uint256 newTokenId = ++currentTokenId;
 
-        if (newTokenId > TOTAL_SUPPLY) {
-            revert MaxSupply();
-        }
+        if (newTokenId > TOTAL_SUPPLY) revert MaxSupply();
+
         _safeMint(to, newTokenId);
 
         return newTokenId;
     }
 
-    function burn(uint256 tokenId) public onlyOwner {
+    function burn(uint256 tokenId) external onlyOwner {
         require(_exists(tokenId), "Token does not exist");
         _burn(tokenId);
     }
 
-    function _baseURI() internal pure override returns (string memory) {
-        return "ipfs://<SOME HASH HERE>/";
-    }
 
     function withdrawPayments(address payable payee) external onlyOwner nonReentrant {
         uint256 balance = address(this).balance;
         (bool transferTx,) = payee.call{value: balance}("");
-        if (!transferTx) {
-            revert WithdrawTransfer();
-        }
+
+        if (!transferTx) revert WithdrawTransfer();
     }
 
     /**
      * @notice Updates the new price of minting a NFT
      * @param newMintPrice New price to mint a NFT
+     * @return A boolean indicating the success of the function.
      */
     function UpdateMintPrice(uint256 newMintPrice) external onlyOwner nonReentrant returns (bool) {
         mintPrice = newMintPrice;
         return true;
+    }
+
+    function _baseURI() internal pure override returns (string memory) {
+        return "ipfs://<SOME HASH HERE>/";
     }
 
     /**
