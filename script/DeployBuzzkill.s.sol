@@ -3,7 +3,7 @@ pragma solidity ^0.8.23;
 
 import {Script} from "lib/forge-std/src/Script.sol";
 
-import {BuzzkillNFT} from "src/BuzzkillNFT.sol";
+import {BuzzkillNFT} from "src/NFT/BuzzkillNFT.sol";
 
 
 contract DeployBuzzkill is Script {
