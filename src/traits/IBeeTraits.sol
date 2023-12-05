@@ -3,9 +3,7 @@ pragma solidity ^0.8.23;
 
 import {TraitsState} from "../traits/TraitsState.sol";
 
-
-interface IBeeSkills {
-
+interface IBeeTraits {
     ////////////////////////
     /// EVENTS
     ////////////////////////
@@ -22,7 +20,9 @@ interface IBeeSkills {
     ////////////////////////
     /// FUNCTIONS
     ////////////////////////
-    function initializeBeeTraits(uint256 tokenId, bool _isQueen, TraitsState.Environments _environment) external returns (bool);
+    function initializeBeeTraits(uint256 tokenId, bool _isQueen, TraitsState.Environments _environment)
+        external
+        returns (bool);
         // require(!tokenIdToBeeTraits[tokenId].initializedTraits, "Traits already initialized");
         // require(onlyOwner)
 
@@ -40,9 +40,8 @@ interface IBeeSkills {
 
         // return true;
 
-
     function getBeeTraitsFromTokenId(uint256 tokenId) external;
-    // return beeSkills struct
+    // return beeTraits struct
 
     function upgradeAttack(uint256 tokenId, address honeyTokenAddress, address nftAddress) external;
     // Check initializedSkills is true

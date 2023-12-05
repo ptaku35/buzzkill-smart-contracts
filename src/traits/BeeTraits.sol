@@ -5,8 +5,6 @@ import {TraitsState} from "../traits/TraitsState.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-
-contract BeeTraits {
-
-
+contract BeeTraits is TraitsState, Ownable, ReentrancyGuard {
+    constructor(address _initialOwner) Ownable(_initialOwner) {}
 }
