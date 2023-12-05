@@ -1,33 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
+import {TraitsState} from "../traits/TraitsState.sol";
+
+
 interface IHive {
-
-    ////////////////////////
-    /// STATE VARIABLES 
-    ////////////////////////
-
-    // uint256 maxNumberOfBeesThatCanBeStakedPerHive
-    // uint256 maxNumberOfQueenBeesThatCanBeStakedPerHive
-
-    // mapping(uint256 tokenId => uint256 hiveId) tokenIdToHiveId
-    // mapping(address user => uin256[] stakedBees) ListOfUsersStakedBees
-    // mapping(uint256 tokenId) vault
-
-    enum Environments {
-        volcano,
-        ice,
-        desert,
-        grass,
-        river
-    }
-
 
     struct HiveTraits {
         uint256 hiveId;
         uint256 numberOfQueensStaked;
         uint256 numberOfDronesStaked;
-        Environments environment;
+        TraitsState.Environments environment;
     }
 
     ////////////////////////
@@ -44,13 +27,17 @@ interface IHive {
     function stakeBee(uint256 tokenId, uint256 hiveId) external returns (bool);
     // verify ownership of NFT before staking
     // Check alreadyStaked bool expression to be false
-    // Transfer NFT to the Hive contract or marked as staked
+    // Transfer NFT to the Hive contract and marked as staked
     // Update tokenIdToHiveId mapping to map token to hive
     // Update allOfUsersStakedBees mapping to reflect all the bees the user has staked
 
     function UnstakeBee(uint256 tokenId) external returns (bool);
     // When unstaking bee, need to update number of Queen bees staked in the Hive struct
     // Calculate rewards
+
+    function viewAmountOfClaimableTokens(address user) external view returns (uint256);
+
+    function calculateClaimableTokens() external returns (uint256);
 
     function addHive() external returns (bool);
 

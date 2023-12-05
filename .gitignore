@@ -12,3 +12,7 @@ docs/
 
 # Dotenv file
 .env
+
+# Example Vault contract
+utils/FnG/
+.FreaksnGUildsVault.sol
