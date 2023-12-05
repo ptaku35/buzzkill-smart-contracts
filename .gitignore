@@ -14,5 +14,5 @@ docs/
 .env
 
 # Example Vault contract
-utils/FnG/
-.FreaksnGUildsVault.sol
+src/utils/FnG/
+.FreaksnGuildsVault.sol
