@@ -36,8 +36,15 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
     /// @notice Mapping of timestamps from each staked token id
     mapping(address => mapping(uint256 => uint256)) public _depositedBlocks;
 
+    /// @notice Set of hives mapped to token Ids and their timestamps
+    mapping(uint256 => mapping(uint256 => uint256)) public _hiveIdToTokenIdAndTimestamps;
+
     /// @notice Mapping of tokenIds to their rate modifier
     mapping(uint256 => uint256) public _rateModifiers;
+
+    /* -------------------------------------------------------------------------- */
+    /*  Constructor                                                               */
+    /* -------------------------------------------------------------------------- */
 
     constructor(
         address initialOwner,
@@ -55,15 +62,94 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
     /*  Logic Functions                                                           */
     /* -------------------------------------------------------------------------- */
 
-    function deposit(uint256 tokenId) external whenNotPaused {}
+    /// @dev This function does not make any checks!
+    /// @notice Deposit tokens into the vault
+    /// @param tokenId Token to be deposited
+    function deposit(uint256 tokenId) external whenNotPaused {
+        // Add the new deposit to the mapping
+        _depositedIds[msg.sender].add(tokenId);
+        _depositedBlocks[msg.sender][tokenId] = block.timestamp;
 
-    function withdraw(uint256 tokenId) external whenNotPaused {}
+        // Transfer the deposited token to this contract
+        stakingToken.transferFrom(msg.sender, address(this), tokenId);
+    }
 
-    function claim() external whenNotPaused {}
+    /// @notice Withdraw tokens and claim their pending rewards
+    /// @param tokenId Staked token Id
+    function withdraw(uint256 tokenId) external whenNotPaused {
+        uint256 totalRewards;
+        require(_depositedIds[msg.sender].contains(tokenId), "Error: Not token owner");
+        // Calculate rewards
+        totalRewards = _earned(_depositedBlocks[msg.sender][tokenId], tokenId);
+        
+        // Update mappings
+        _depositedIds[msg.sender].remove(tokenId);
+        delete _depositedBlocks[msg.sender][tokenId];
 
-    function earned(address account) external view returns (uint256) {}
+        //Transfer NFT and reward tokens
+        stakingToken.safeTransferFrom(address(this), msg.sender, tokenId);
+        rewardToken.mintTo(msg.sender, totalRewards);
+    }
 
-    function depositsOf(address account) external view returns (uint256) {}
+    /// @notice Claim pending token rewards
+    function claim() external whenNotPaused {
+        uint256 totalRewards;
+        uint256 length = _depositedIds[msg.sender].length();
+        uint256 tokenId;
+        for (uint256 i = 0; i < length; i++) {
+            // Calculate total rewards
+            tokenId = _depositedIds[msg.sender].at(i);
+            totalRewards += _earned(_depositedBlocks[msg.sender][tokenId], tokenId);
+            // Update last checkpoint
+            _depositedBlocks[msg.sender][tokenId] = block.timestamp;
+        }
+        // Mint new tokens
+        rewardToken.mintTo(msg.sender, totalRewards);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*  View Functions                                                            */
+    /* -------------------------------------------------------------------------- */
+
+    /// @notice Calculate total rewards for a given account
+    /// @param account User's address
+    function totalEarned(address account) external view returns (uint256[] memory rewards) {
+        uint256 length = _depositedIds[account].length();
+        rewards = new uint256[](length);
+
+        for (uint256 i = 0; i < length; i++) {
+            uint256 tokenId = _depositedIds[account].at(i);
+            rewards[i] = _earned(_depositedBlocks[account][tokenId], tokenId);
+        }
+    }
+
+    /// @notice Internally calculates rewards
+    /// @param timestamp Timestamp at time of deposit
+    /// @param tokenId Staked token id
+    function _earned(uint256 timestamp, uint256 tokenId) internal view returns (uint256) {
+        if (timestamp == 0) return 0;
+        uint256 rateForTokenId = rate + _rateModifiers[tokenId];
+        uint256 end;
+        if (endTime == 0) { // endtime not set, which is likely
+            end = block.timestamp;
+        } else {
+            end = Math.min(block.timestamp, endTime);
+        }
+        if (timestamp > end) return 0;
+
+        return ((end - timestamp) * rateForTokenId) / 1 days;
+    }
+
+    /// @notice Retrieve all token ids deposited in a user's account
+    /// @param account User's address
+    function depositsOf(address account) external view returns (uint256[] memory ids) {
+        uint256 length = _depositedIds[account].length();
+        ids = new uint256[](length);
+
+        for (uint256 i = 0; i < length; i++) {
+            ids[i] = _depositedIds[account].at(i);
+        }
+    }
 
     /* -------------------------------------------------------------------------- */
     /*  Owner Functions                                                           */
