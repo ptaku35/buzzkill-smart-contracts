@@ -155,15 +155,35 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
     /*  Owner Functions                                                           */
     /* -------------------------------------------------------------------------- */
 
-    function setRate(uint256 newRate) external onlyOwner {}
+    /// @notice Set the new token rewards rate
+    /// @param newRate Emmission rate in wei
+    function setRate(uint256 newRate) external onlyOwner {
+        rate = newRate;
+    }
 
-    function setEndTime(uint256 newEndTime) external onlyOwner {}
+    /// @notice Set new token rewards end time
+    /// @param newEndTime End time of token yield. Probably won't be needed
+    function setEndTime(uint256 newEndTime) external onlyOwner {
+        endTime = newEndTime;
+    }
 
-    function setRateModifier(uint256 tokenId, uint256 rateModifier) external onlyOwner {}
+    /// @notice Set a rate multiplier for a specific tokenId
+    /// @param rateModifier The new multiplier to add to the rate
+    function setRateModifier(uint256 tokenId, uint256 rateModifier) external onlyOwner {
+        _rateModifiers[tokenId] = rateModifier;
+    }
 
-    function setNewStakingAddress(address newStakingAddress) external onlyOwner {}
+    /// @notice Set the new staking token contract address
+    /// @param newStakingTokenAddress New staking token address
+    function setNewStakingAddress(address newStakingTokenAddress) external onlyOwner {
+        stakingToken = BuzzkillNFT(newStakingTokenAddress);
+    }
 
-    function setNewRewardTokenAddress(address newRewardToken) external onlyOwner {}
+    /// @notice Set the new reward token contract address
+    /// @param newRewardTokenAddress New reward token address
+    function setNewRewardTokenAddress(address newRewardTokenAddress) external onlyOwner {
+        rewardToken = Honey(newRewardTokenAddress);
+    }
 
     /// @notice Pause the contract.
     function pause() external onlyOwner {
