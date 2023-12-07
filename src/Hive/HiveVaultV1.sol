@@ -22,22 +22,25 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
     uint256 private currentHiveId;
 
     /// @notice Rewards emitted per day staked
-    uint256 public rate;
+    uint256 private rate;
 
     /// @notice Endtime of token rewards
-    uint256 public endTime;
+    uint256 private endTime;
 
     /// @notice Limit of worker bees per hive
-    uint256 public maxWorkersPerHive;
+    uint256 private maxWorkersPerHive;
 
     /// @notice Limit of queen bees per hive
-    uint256 public maxQueensPerHive;
+    uint256 private maxQueensPerHive;
 
     /// @notice Interval for updating rewards earned
     uint256 public rewardInterval;
 
     /// @notice Keep track of timestamp at the last reward interval
-    uint256 public lastRewardIntervalTimestamp;
+    uint256 private lastRewardIntervalTimestamp;
+
+    /// @notice Time of a single epoch
+    uint256 private epochDuration;
 
     /// @notice Staking token contract address
     BuzzkillNFT public stakingToken;
@@ -104,7 +107,8 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
         uint256 initialRewardsRate,
         uint256 _maxQueensPerHive,
         uint256 _maxWorkersPerHive,
-        uint256 _rewardInterval
+        uint256 _rewardInterval,
+        uint256 _epochDuration
     ) Ownable(initialOwner) {
         stakingToken = BuzzkillNFT(buzzkillNFT);
         rewardToken = Honey(honey);
@@ -114,6 +118,7 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
         maxQueensPerHive = _maxQueensPerHive;
         rewardInterval = _rewardInterval;
         lastRewardIntervalTimestamp = block.timestamp;
+        epochDuration = _epochDuration;
         _pause();
     }
 
@@ -128,44 +133,26 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
         require(msg.sender == stakingToken.ownerOf(tokenId), "Error: Only token owner can stake");
         require(hiveId <= currentHiveId && hiveId > 0, "Error: Invalid hive ID");
         require(currentHiveId > 0, "Error: No Hives have been created");
-
         // Update Hive traits
-        HiveTraits memory hiveTraits = _hiveIdToHiveTraits[hiveId];
-        if (beeSkills.getIsQueen(tokenId)) {
-            uint256 queens = hiveTraits.numberOfQueensStaked++;
-            require(queens <= maxQueensPerHive, "Queen limit reached in hive");
-        } else {
-            uint256 workers = hiveTraits.numberOfWorkersStaked++;
-            require(workers <= maxWorkersPerHive, "Worker limit reached in hive");
-        }
-        // Update mapping
+        updateBeeCountInHive(hiveId, beeSkills.getIsQueen(tokenId), true);
+        // Update token to hive mapping
         _tokenIdToHiveId[tokenId] = hiveId;
-
         // Transfer NFT to vault
         deposit(tokenId);
 
         return true;
     }
 
-    /**
-     * @notice Unstake a bee NFT and claim rewards based on the time it has been staked.
-     * @dev The caller must be the owner of the NFT and the NFT must be currently staked.
-     * @param tokenId The unique identifier of the bee NFT to be unstaked and claimed.
-     * @return A boolean indicating the success of the unstaking and reward claiming process.
-     */
+    /// @notice Unstake a bee NFT and claim rewards based on the time it has been staked.
+    /// @dev The caller must be the owner of the NFT and the NFT must be currently staked.
+    /// @param tokenId The unique identifier of the bee NFT to be unstaked and claimed.
     function unstakeBee(uint256 tokenId) external whenNotPaused returns (bool) {
         // Get hive Id
         uint256 hiveId = _tokenIdToHiveId[tokenId];
         // Update Hive traits
-        HiveTraits memory hiveTraits = _hiveIdToHiveTraits[hiveId];
-        if (beeSkills.getIsQueen(tokenId)) {
-            hiveTraits.numberOfQueensStaked--;
-        } else {
-            hiveTraits.numberOfWorkersStaked--;
-        }
-        // Update mapping and variables
+        updateBeeCountInHive(hiveId, beeSkills.getIsQueen(tokenId), false);
+        // Update token to hive mapping
         delete _tokenIdToHiveId[tokenId];
-
         // Transfer NFT back to user
         withdraw(tokenId);
 
@@ -173,7 +160,7 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
     }
 
     /// @notice Claim pending token rewards
-    ///  TODO: Review this from changing the mapping frmo user=>tokenID=>timestamp
+    ///  TODO: Review this from changing the mapping from user=>tokenID=>timestamp
     function claim() external whenNotPaused nonReentrant {
         uint256 totalRewards;
         uint256 length = _depositedIds[msg.sender].length();
@@ -215,10 +202,11 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
 
         lastRewardIntervalTimestamp = block.timestamp;
         _depositedBlocks[tokenId] = lastRewardIntervalTimestamp;
+        // accum += rewardAtEachInterval
     }
 
     /* -------------------------------------------------------------------------- */
-    /*  Private/Internal Functions                                                           */
+    /*  Private/Internal Functions                                                */
     /* -------------------------------------------------------------------------- */
 
     /// @notice Deposit tokens into the vault
@@ -239,6 +227,7 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
     /// @param tokenId Staked token Id
     function withdraw(uint256 tokenId) private nonReentrant {
         uint256 totalRewards;
+        // Check statement should check ownership and already staked simultaneously
         require(_depositedIds[msg.sender].contains(tokenId), "Error: Not token owner");
         // Calculate rewards
         totalRewards = _earned(_depositedBlocks[tokenId], tokenId);
@@ -267,7 +256,30 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
         }
         if (timestamp > end) return 0;
 
-        return ((end - timestamp) * rateForTokenId) / 1 days;
+        return ((end - timestamp) * rateForTokenId) / epochDuration;
+    }
+
+    /// @notice Update bee count in Hive for every deposit and withdraw
+    /// @param hiveId The hive where the NFT is being deposited or withdrawn
+    /// @param isQueen Is the NFT a queen or a worker
+    /// @param isDeposit Boolean as whether the NFT is being deposited
+    function updateBeeCountInHive(uint256 hiveId, bool isQueen, bool isDeposit) private view {
+        HiveTraits memory hiveTraits = _hiveIdToHiveTraits[hiveId];
+        if (isDeposit) {
+            if (isQueen) {
+                uint256 queens = hiveTraits.numberOfQueensStaked++;
+                require(queens <= maxQueensPerHive, "Queen limit reached in hive");
+            } else {
+                uint256 workers = hiveTraits.numberOfWorkersStaked++;
+                require(workers <= maxWorkersPerHive, "Worker limit reached in hive");
+            }
+        } else {
+            if (isQueen) {
+                hiveTraits.numberOfQueensStaked--;
+            } else {
+                hiveTraits.numberOfWorkersStaked--;
+            }
+        }
     }
 
     /* -------------------------------------------------------------------------- */
@@ -347,6 +359,10 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
     /// @param newRewardInterval New time for reward interval
     function setRewardInterval(uint256 newRewardInterval) external onlyOwner {
         rewardInterval = newRewardInterval;
+    }
+
+    function setEpochDuration(uint256 newEpochDuration) external onlyOwner {
+        epochDuration = newEpochDuration;
     }
 
     /// @notice Add a new hive with the specified environment.
