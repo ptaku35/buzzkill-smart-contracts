@@ -19,7 +19,7 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     /* -------------------------------------------------------------------------- */
     /*                         State Variables                                    */
     /* -------------------------------------------------------------------------- */
-    uint256 private currentTokenId;
+    uint256 public currentTokenId;
     uint256 public constant TOTAL_SUPPLY = 10_000;
     uint256 public mintPrice;
 

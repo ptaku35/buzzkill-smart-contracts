@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-interface IBeeTraits {
+contract BeeSkills is Ownable, ReentrancyGuard {
 
     enum Environments {
         fire,
@@ -26,27 +28,14 @@ interface IBeeTraits {
         Environments environment;
     }
 
-    // mapping(uint256 tokenId => BeeTraits) _tokenIdToBeeTraits;
+    mapping(uint256 tokenId => BeeTraits) public _tokenIdToBeeTraits;
 
-    ////////////////////////
-    /// EVENTS
-    ////////////////////////
 
-    event BeeTraitUpgraded(uint256 tokeId);
-    event CoolDownStarted();
+    constructor(address _initialOwner) Ownable(_initialOwner) {}
 
-    ////////////////////////
-    /// MODIFIERS
-    ////////////////////////
-
-    // modifier onlyTokenOwner;
-
-    ////////////////////////
-    /// FUNCTIONS
-    ////////////////////////
     function initializeBeeTraits(uint256 tokenId, bool _isQueen, Environments _environment)
         external
-        returns (bool);
+        returns (bool) {}
         // require(!tokenIdToBeeTraits[tokenId].initializedTraits, "Traits already initialized");
         // require(onlyOwner)
 
@@ -64,17 +53,21 @@ interface IBeeTraits {
 
         // return true;
 
-    function getBeeTraitsFromTokenId(uint256 tokenId) external;
+    function getBeeTraitsFromTokenId(uint256 tokenId) external {}
     // return beeTraits struct
 
-    function upgradeAttack(uint256 tokenId, address honeyTokenAddress, address nftAddress) external;
+    function upgradeAttack(uint256 tokenId, address honeyTokenAddress, address nftAddress) external {}
     // Check initializedSkills is true
 
-    function upgradeDefense(uint256 tokenId, address honeyTokenAddress, address nftAddress) external;
+    function upgradeDefense(uint256 tokenId, address honeyTokenAddress, address nftAddress) external {}
     // Check initializedSkills is true
 
-    function upgradeForaging(uint256 tokenId, address honeyTokenAddress, address nftAddress) external;
+    function upgradeForaging(uint256 tokenId, address honeyTokenAddress, address nftAddress) external {}
     // Check initializedSkills is true
 
-    function cooldownStatus(uint256 tokenId) external;
+    function cooldownStatus(uint256 tokenId) external {}
+
+    function getIsQueen(uint256 tokenId) external view returns (bool) {
+        return _tokenIdToBeeTraits[tokenId].isQueen;
+    }
 }
