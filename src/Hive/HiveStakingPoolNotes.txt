@@ -1,0 +1,101 @@
+Hive accrues token per time interval
+    - Every time interval tokens are minted to each Hive based on the Hive Rate Modifier (RM)
+        - RM is based on number of queens and worker bees 
+        - number of bees in a hive will be calculated at every half reward interval; beeCountInterval = rewardInterval / 2
+        - At every rewardInterval the average bee count per beeCountInterval will be calculated and used as the RM for each hive
+        - Bee count = queen bee + worker bee. Queen bee is worth more than worker bee -> QB is 5times worker bee. Total Bees = 5*QB + workers
+
+Variables
+    - Hive Pool, Honey balance of each hive
+    - Hive rate modifier 
+    - reward interval
+    - bee count interval
+    - reward timestamp
+
+
+functions
+    - Track Hive Pool balance
+    - Calculate honey owed to hive at each reward interval
+    - Calculate average bee count at reward interval
+    - Calculate bee count at each beeCountInterval
+    - OnlyOwner withdrawal function so tokens doesn't get locked
+    - NFT's
+        - Claim rewards based on time staked and honey pool size at the time of claiming
+        - Need make sure the base rate doesn't drain 
+
+
+
+- ADD TO RATE MULTIPLIER BASED ON BEES STAKED IN THE HIVE. RM is set to each hive and that sets it for each NFT  
+- MULTIPLIER IS SET EVERY EPOCH
+- LOCK UP PERIOD EQUAL TO ONE EPOCH 
+- When user goes to claim, RM is added to their base rate
+
+variable lockupPeriod
+variable RM
+variable epochDuration
+mapping of NFT to lockupPeriod, lockUpExpirationTimestamp
+mapping of hiveId to RM
+
+funciton stakeBee  
+    - lockupExpirationTimestamp[hiveId][tokenId] = block.timestamp + lockupDuration;
+
+function unstake and claim
+    - Check lockUpExpirationTimestamp > block.timestamp
+
+function setEpochDuration
+function updateRateMultiplierForEachHive
+function setLockUpPeriod
+
+
+    constructor(
+
+        // uint256 _rewardInterval,
+    ) Ownable(initialOwner) {
+        // rewardInterval = _rewardInterval;
+        // lastRewardIntervalTimestamp = block.timestamp;
+    }
+
+    // /// @notice Interval for updating rewards earned
+    // uint256 private rewardInterval;
+
+    // /// @notice Keep track of timestamp at the last reward interval
+    // uint256 private lastRewardIntervalTimestamp;
+
+    // /// @notice Mapping from tokenId to accumulated rewards
+    // mapping(uint256 tokenId => uint256 accumulatedRewards) public _tokenIdToAccumulatedRewards;
+
+    // /// @notice Mapping of hiveIds to their rate modifier
+    // mapping(uint256 hiveId => uint256 rateMultiplier) public _rateMultiplier;
+
+    // /// @notice Calculating rewards at each reward interval
+    // function accumulatedTokenIdRewards(uint256 tokenId) external onlyOwner returns (uint256 rewards) {
+    //     require(stakingToken.currentTokenId() <= tokenId, "Token ID doesn't exist");
+    //     require(
+    //         block.timestamp >= lastRewardIntervalTimestamp + rewardInterval,
+    //         "Can only be called once every reward Interval"
+    //     );
+
+    //     // Need rate modifier
+    //     uint256 hiveId = _tokenIdToHiveId[tokenId];
+    //     uint256 rateMultiplier = _rateMultiplier[hiveId];
+
+    //     // Need staked timestamp
+    //     uint256 startingStakedTime = _depositedBlocks[tokenId];
+
+    //     // Need current timestamp
+    //     uint256 currentTimestamp = block.timestamp;
+    //     // Need rewardIntervalTimestamp TODO: Need to update this every interval
+
+    //     // need an accumulator variable to keep track of accrued reward for each tokenId
+    //     _tokenIdToAccumulatedRewards[tokenId] += rateMultiplier * (currentTimestamp - startingStakedTime);
+
+    //     lastRewardIntervalTimestamp = block.timestamp;
+    //     _depositedBlocks[tokenId] = lastRewardIntervalTimestamp;
+    //     // accum += rewardAtEachInterval
+    // }
+
+    // /// @notice Set the new time for reward interval
+    // /// @param newRewardInterval New time for reward interval
+    // function setRewardInterval(uint256 newRewardInterval) external onlyOwner {
+    //     rewardInterval = newRewardInterval;
+    // }

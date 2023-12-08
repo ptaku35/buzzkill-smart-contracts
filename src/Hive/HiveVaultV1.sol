@@ -10,13 +10,35 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-/// @title Hive Vault
+
+/**
+ * @title HiveVaultV1
+ * @author Earendel Labs
+ * @notice This contract controls the staking mechanism. 
+ * 
+ *  The contract tracks all the hives that NFTs can be staked as well as
+ *  the staking mechanics for each hive.
+ * 
+ *  Each hive has a rate multiplier (RM). Users stake their bee in whatever
+ *  hive they choose. They can claim rewards based on time staked multiplied by 
+ *  the hive RM. There is a lock-up period for staking. 
+ * 
+ *  Each hive has a balance of $honey. Users stake their bees in whatever
+ *  hive they choose. They can claim rewards based on time staked and 
+ */
+
+// 
+
 contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
     using EnumerableSet for EnumerableSet.UintSet;
 
     /* -------------------------------------------------------------------------- */
     /*  State Variables                                                           */
     /* -------------------------------------------------------------------------- */
+
+    /// TODO: Appropriately decide the value of a queen to a worker in terms of earning honey
+    /// @notice Ratio of the value of a queen to a worker
+    uint256 private constant QUEEN_TO_WORKER_RATIO = 5;
 
     /// @notice Id assigned to a hive
     uint256 private currentHiveId;
@@ -33,14 +55,19 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
     /// @notice Limit of queen bees per hive
     uint256 private maxQueensPerHive;
 
-    /// @notice Interval for updating rewards earned
-    uint256 public rewardInterval;
-
-    /// @notice Keep track of timestamp at the last reward interval
-    uint256 private lastRewardIntervalTimestamp;
+    /// @notice Lock-up time after depositing NFT
+    uint256 private lockUpDuration;
 
     /// @notice Time of a single epoch
     uint256 private epochDuration;
+
+    /// @notice Current Epoch timestamp
+    uint256 private currentEpochTimestamp;
+
+    /// @notice Set of existing Hive Ids
+    EnumerableSet.UintSet private allHiveIds;
+
+    // TODO: Consider a transaction fee for withdrawal/claim
 
     /// @notice Staking token contract address
     BuzzkillNFT public stakingToken;
@@ -52,13 +79,10 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
     BeeSkills public beeSkills;
 
     /// @notice Set of staked token Ids by address
-    mapping(address user => EnumerableSet.UintSet stakedTokenIds) internal _depositedIds;
+    mapping(address user => EnumerableSet.UintSet stakedTokenIds) private _depositedIds;
 
     /// @notice Mapping of timestamps from each staked token id
-    mapping(uint256 tokenId => uint256 timestamp) public _depositedBlocks;
-
-    /// @notice Mapping from tokenId to accumulated rewards
-    mapping(uint256 tokenId => uint256 accumulatedRewards) public _tokenIdToAccumulatedRewards;
+    mapping(uint256 tokenId => uint256 timestamp) private _depositedBlocks;
 
     /// @notice Mapping of hive to its hive traits
     mapping(uint256 hiveId => HiveTraits hiveTraits) public _hiveIdToHiveTraits;
@@ -66,8 +90,8 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
     /// @notice Mapping of staking token to its staked hive
     mapping(uint256 tokenId => uint256 hiveId) public _tokenIdToHiveId;
 
-    /// @notice Mapping of hiveIds to their rate modifier
-    mapping(uint256 hiveId => uint256 rateModifier) public _rateModifiers;
+    ///@notice Mapping to store the lock-up expiration timestamp for each NFT
+    mapping(uint256 tokenId => uint256 lockUpExpiration) public _lockUpExpirationTimestamp;
 
     /// @notice Different hive environments
     enum Environments {
@@ -78,9 +102,10 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
         water
     }
 
-    /// @notice Various hive straits
+    /// @notice Struct representing traits of a hive
     struct HiveTraits {
         uint256 hiveId;
+        uint256 rateMultiplier;
         uint256 numberOfQueensStaked;
         uint256 numberOfWorkersStaked;
         uint256 hiveDefense; // b/w 0-50
@@ -104,21 +129,21 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
         address buzzkillNFT,
         address honey,
         address _beeSkills,
-        uint256 initialRewardsRate,
+        uint256 _rate,
         uint256 _maxQueensPerHive,
         uint256 _maxWorkersPerHive,
-        uint256 _rewardInterval,
-        uint256 _epochDuration
+        uint256 _epochDuration,
+        uint256 _lockUpDuration
     ) Ownable(initialOwner) {
         stakingToken = BuzzkillNFT(buzzkillNFT);
         rewardToken = Honey(honey);
         beeSkills = BeeSkills(_beeSkills);
-        rate = initialRewardsRate;
+        rate = _rate;
         maxWorkersPerHive = _maxWorkersPerHive;
         maxQueensPerHive = _maxQueensPerHive;
-        rewardInterval = _rewardInterval;
-        lastRewardIntervalTimestamp = block.timestamp;
         epochDuration = _epochDuration;
+        lockUpDuration = _lockUpDuration;
+        currentEpochTimestamp = block.timestamp;
         _pause();
     }
 
@@ -132,13 +157,12 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
     function stakeBee(uint256 tokenId, uint256 hiveId) external whenNotPaused returns (bool) {
         require(msg.sender == stakingToken.ownerOf(tokenId), "Error: Only token owner can stake");
         require(hiveId <= currentHiveId && hiveId > 0, "Error: Invalid hive ID");
-        require(currentHiveId > 0, "Error: No Hives have been created");
-        // Update Hive traits
-        updateBeeCountInHive(hiveId, beeSkills.getIsQueen(tokenId), true);
-        // Update token to hive mapping
-        _tokenIdToHiveId[tokenId] = hiveId;
-        // Transfer NFT to vault
-        deposit(tokenId);
+        
+        _tokenIdToHiveId[tokenId] = hiveId; 
+        _lockUpExpirationTimestamp[tokenId] = block.timestamp + lockUpDuration;
+        _updateBeeCountInHive(hiveId, beeSkills.getIsQueen(tokenId), true);
+
+        _deposit(tokenId);
 
         return true;
     }
@@ -147,14 +171,16 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
     /// @dev The caller must be the owner of the NFT and the NFT must be currently staked.
     /// @param tokenId The unique identifier of the bee NFT to be unstaked and claimed.
     function unstakeBee(uint256 tokenId) external whenNotPaused returns (bool) {
-        // Get hive Id
-        uint256 hiveId = _tokenIdToHiveId[tokenId];
-        // Update Hive traits
-        updateBeeCountInHive(hiveId, beeSkills.getIsQueen(tokenId), false);
-        // Update token to hive mapping
+        // Check statement simultaneously checks ownership and if already staked 
+        require(_depositedIds[msg.sender].contains(tokenId), "Error: Not token owner or NFT not staked");
+        require(_lockUpExpired(tokenId), "Lock-up period not expired");
+        
+        _updateBeeCountInHive(_tokenIdToHiveId[tokenId], beeSkills.getIsQueen(tokenId), false);
         delete _tokenIdToHiveId[tokenId];
-        // Transfer NFT back to user
-        withdraw(tokenId);
+        _depositedIds[msg.sender].remove(tokenId);
+        delete _depositedBlocks[tokenId];
+
+        _withdraw(tokenId);
 
         return true;
     }
@@ -166,43 +192,19 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
         uint256 length = _depositedIds[msg.sender].length();
         uint256 tokenId;
         for (uint256 i = 0; i < length; i++) {
-            // Calculate total rewards
             tokenId = _depositedIds[msg.sender].at(i);
-            totalRewards += _earned(_depositedBlocks[tokenId], tokenId);
-            // Update last checkpoint
-            _depositedBlocks[tokenId] = block.timestamp;
+
+            // Calculate total rewards if lock-up expired
+            if (_lockUpExpired(tokenId)) {
+                totalRewards += _earned(_depositedBlocks[tokenId], tokenId);
+                // Update last checkpoint
+                _depositedBlocks[tokenId] = block.timestamp;
+            }
         }
         // Mint new tokens
         rewardToken.mintTo(msg.sender, totalRewards);
 
         emit Claimed(msg.sender, block.timestamp);
-    }
-
-    /// @notice Calculating rewards at each reward interval
-    function accumulatedTokenIdRewards(uint256 tokenId) external onlyOwner returns (uint256 rewards) {
-        require(stakingToken.currentTokenId() <= tokenId, "Token ID doesn't exist");
-        require(
-            block.timestamp >= lastRewardIntervalTimestamp + rewardInterval,
-            "Can only be called once every reward Interval"
-        );
-
-        // Need rate modifier
-        uint256 hiveId = _tokenIdToHiveId[tokenId];
-        uint256 rateModifier = _rateModifiers[hiveId];
-
-        // Need staked timestamp
-        uint256 startingStakedTime = _depositedBlocks[tokenId];
-
-        // Need current timestamp
-        uint256 currentTimestamp = block.timestamp;
-        // Need rewardIntervalTimestamp TODO: Need to update this every interval
-
-        // need an accumulator variable to keep track of accrued reward for each tokenId
-        _tokenIdToAccumulatedRewards[tokenId] += rateModifier * (currentTimestamp - startingStakedTime);
-
-        lastRewardIntervalTimestamp = block.timestamp;
-        _depositedBlocks[tokenId] = lastRewardIntervalTimestamp;
-        // accum += rewardAtEachInterval
     }
 
     /* -------------------------------------------------------------------------- */
@@ -211,7 +213,7 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
 
     /// @notice Deposit tokens into the vault
     /// @param tokenId Token to be deposited
-    function deposit(uint256 tokenId) private nonReentrant {
+    function _deposit(uint256 tokenId) private nonReentrant {
         // Add the new deposit to the mapping and check that NFT is not already staked
         bool success = _depositedIds[msg.sender].add(tokenId);
         require(success, "NFT already staked");
@@ -225,15 +227,10 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
 
     /// @notice Withdraw tokens and claim their pending rewards
     /// @param tokenId Staked token Id
-    function withdraw(uint256 tokenId) private nonReentrant {
-        uint256 totalRewards;
-        // Check statement should check ownership and already staked simultaneously
-        require(_depositedIds[msg.sender].contains(tokenId), "Error: Not token owner");
+    function _withdraw(uint256 tokenId) private nonReentrant {
         // Calculate rewards
+        uint256 totalRewards;
         totalRewards = _earned(_depositedBlocks[tokenId], tokenId);
-        // Update mappings
-        _depositedIds[msg.sender].remove(tokenId);
-        delete _depositedBlocks[tokenId];
         //Transfer NFT and reward tokens
         stakingToken.safeTransferFrom(address(this), msg.sender, tokenId);
         rewardToken.mintTo(msg.sender, totalRewards);
@@ -244,9 +241,9 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
     /// @notice Internally calculates rewards
     /// @param timestamp Timestamp at time of deposit
     /// @param tokenId Staked token id
-    function _earned(uint256 timestamp, uint256 tokenId) internal view returns (uint256) {
+    function _earned(uint256 timestamp, uint256 tokenId) private view returns (uint256) {
         if (timestamp == 0) return 0;
-        uint256 rateForTokenId = rate + _rateModifiers[tokenId];
+        uint256 rateForTokenId = rate * _hiveIdToHiveTraits[_tokenIdToHiveId[tokenId]].rateMultiplier;
         uint256 end;
         if (endTime == 0) {
             // endtime not set, which is likely
@@ -256,30 +253,47 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
         }
         if (timestamp > end) return 0;
 
-        return ((end - timestamp) * rateForTokenId) / epochDuration;
+        // TODO: Decide on an appropriate time weighted bonus to give more weight to the amount of time staked
+        // Give more weight to time staked; 10 is just an arbitrary place holder for now
+        uint8 TIME_WEIGHTED_BONUS = 10;
+
+        return ((end - timestamp) * rateForTokenId) * TIME_WEIGHTED_BONUS / epochDuration;
     }
 
     /// @notice Update bee count in Hive for every deposit and withdraw
     /// @param hiveId The hive where the NFT is being deposited or withdrawn
     /// @param isQueen Is the NFT a queen or a worker
     /// @param isDeposit Boolean as whether the NFT is being deposited
-    function updateBeeCountInHive(uint256 hiveId, bool isQueen, bool isDeposit) private view {
-        HiveTraits memory hiveTraits = _hiveIdToHiveTraits[hiveId];
+    function _updateBeeCountInHive(uint256 hiveId, bool isQueen, bool isDeposit) private {
+        // int8 addSubtractOne = isDeposit ? int8(1) : int8(-1);
         if (isDeposit) {
+            // Add to hive
             if (isQueen) {
-                uint256 queens = hiveTraits.numberOfQueensStaked++;
+                uint256 queens = _hiveIdToHiveTraits[hiveId].numberOfQueensStaked++;
                 require(queens <= maxQueensPerHive, "Queen limit reached in hive");
             } else {
-                uint256 workers = hiveTraits.numberOfWorkersStaked++;
+                uint256 workers = _hiveIdToHiveTraits[hiveId].numberOfWorkersStaked++;
                 require(workers <= maxWorkersPerHive, "Worker limit reached in hive");
             }
         } else {
+            // Subtract from hive
             if (isQueen) {
-                hiveTraits.numberOfQueensStaked--;
+                _hiveIdToHiveTraits[hiveId].numberOfQueensStaked--;
             } else {
-                hiveTraits.numberOfWorkersStaked--;
+                _hiveIdToHiveTraits[hiveId].numberOfWorkersStaked--;
             }
         }
+    }
+
+    function _lockUpExpired(uint256 tokenId) private view returns (bool) {
+        return block.timestamp > _lockUpExpirationTimestamp[tokenId];
+    }
+
+    function _calculateHiveRateMultiplier(uint256 hiveId) private view returns (uint256 newRateMultiplier) {
+        HiveTraits memory hive = _hiveIdToHiveTraits[hiveId];
+        uint256 queens = hive.numberOfQueensStaked;
+        uint256 workers = hive.numberOfWorkersStaked;
+        newRateMultiplier = queens * QUEEN_TO_WORKER_RATIO + workers;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -325,10 +339,18 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
         endTime = newEndTime;
     }
 
-    /// @notice Set a rate multiplier for a specific tokenId
-    /// @param rateModifier The new multiplier to add to the rate
-    function setRateModifier(uint256 tokenId, uint256 rateModifier) external onlyOwner {
-        _rateModifiers[tokenId] = rateModifier;
+    /// @notice Update rate multiplier for each hive 
+    /// @dev Rate multipliers gets updated once every epoch
+    /// @dev Needs to be called off-chain
+    function updateAllHiveRateMultipliers() external onlyOwner {
+        require(block.timestamp >= currentEpochTimestamp + epochDuration, "Too soon to update");
+        uint256 length = allHiveIds.length();
+        uint256 hiveId;
+        // Set new rate multiplier for all existing hives
+        for (uint256 i = 0; i < length; i++) {
+            _hiveIdToHiveTraits[hiveId].rateMultiplier = _calculateHiveRateMultiplier(allHiveIds.at(i));
+        }
+        currentEpochTimestamp = block.timestamp;
     }
 
     /// @notice Set the new staking token contract address
@@ -355,10 +377,10 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
         maxQueensPerHive = newMaxQueensPerHive;
     }
 
-    /// @notice Set the new time for reward interval
-    /// @param newRewardInterval New time for reward interval
-    function setRewardInterval(uint256 newRewardInterval) external onlyOwner {
-        rewardInterval = newRewardInterval;
+    /// @notice Set new lock up duration for staking NFTs
+    /// @param newLockUpDuration New minimum time NFTs must be staked
+    function setLockUpDuration(uint256 newLockUpDuration) external onlyOwner {
+        lockUpDuration = newLockUpDuration;
     }
 
     function setEpochDuration(uint256 newEpochDuration) external onlyOwner {
@@ -374,9 +396,11 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
             "Error: Invalid environment"
         );
         uint256 newHiveId = currentHiveId++;
+        allHiveIds.add(newHiveId);
 
         _hiveIdToHiveTraits[newHiveId] = HiveTraits({
             hiveId: newHiveId,
+            rateMultiplier: 0,
             numberOfQueensStaked: 0,
             numberOfWorkersStaked: 0,
             hiveDefense: _hiveDefense,
@@ -391,6 +415,7 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
         // Hive must be empty of all bees before deleting it
         require(_hiveIdToHiveTraits[hiveId].numberOfQueensStaked == 0, "Queen still in the hive");
         require(_hiveIdToHiveTraits[hiveId].numberOfWorkersStaked == 0, "Worker still in the hive");
+        allHiveIds.remove(hiveId);
         delete _hiveIdToHiveTraits[hiveId];
         return true;
     }
