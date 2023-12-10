@@ -11,7 +11,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 /// @title Hive Vault
-contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
+contract HiveVaultV1Basic is Ownable, Pausable, ReentrancyGuard {
     using EnumerableSet for EnumerableSet.UintSet;
 
     /* -------------------------------------------------------------------------- */

@@ -10,24 +10,23 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-
 /**
  * @title HiveVaultV1
  * @author Earendel Labs
- * @notice This contract controls the staking mechanism. 
- * 
+ * @notice This contract controls the staking mechanism.
+ *
  *  The contract tracks all the hives that NFTs can be staked as well as
  *  the staking mechanics for each hive.
- * 
+ *
  *  Each hive has a rate multiplier (RM). Users stake their bee in whatever
- *  hive they choose. They can claim rewards based on time staked multiplied by 
- *  the hive RM. There is a lock-up period for staking. 
- * 
+ *  hive they choose. They can claim rewards based on time staked multiplied by
+ *  the hive RM. There is a lock-up period for staking.
+ *
  *  Each hive has a balance of $honey. Users stake their bees in whatever
- *  hive they choose. They can claim rewards based on time staked and 
+ *  hive they choose. They can claim rewards based on time staked and
  */
 
-// 
+//
 
 contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
     using EnumerableSet for EnumerableSet.UintSet;
@@ -36,6 +35,10 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
     /*  State Variables                                                           */
     /* -------------------------------------------------------------------------- */
 
+    // TODO: Decide on an appropriate time weighted bonus to give more weight to the amount of time staked
+    // Give more weight to time staked; 10 is just an arbitrary place holder for now
+    uint8 TIME_WEIGHTED_BONUS = 10;
+
     /// TODO: Appropriately decide the value of a queen to a worker in terms of earning honey
     /// @notice Ratio of the value of a queen to a worker
     uint256 private constant QUEEN_TO_WORKER_RATIO = 5;
@@ -43,8 +46,8 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
     /// @notice Id assigned to a hive
     uint256 private currentHiveId;
 
-    /// @notice Rewards emitted per day staked
-    uint256 private rate;
+    /// @notice Rewards emitted per day staked in wei
+    uint256 private rate;                               //! Denominated in wei
 
     /// @notice Endtime of token rewards
     uint256 private endTime;
@@ -128,21 +131,21 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
         address initialOwner,
         address buzzkillNFT,
         address honey,
-        address _beeSkills,
-        uint256 _rate,
-        uint256 _maxQueensPerHive,
-        uint256 _maxWorkersPerHive,
-        uint256 _epochDuration,
-        uint256 _lockUpDuration
+        address beeSkills_,
+        uint256 rate_,
+        uint256 maxQueensPerHive_,
+        uint256 maxWorkersPerHive_,
+        uint256 epochDuration_,
+        uint256 lockUpDuration_
     ) Ownable(initialOwner) {
         stakingToken = BuzzkillNFT(buzzkillNFT);
         rewardToken = Honey(honey);
-        beeSkills = BeeSkills(_beeSkills);
-        rate = _rate;
-        maxWorkersPerHive = _maxWorkersPerHive;
-        maxQueensPerHive = _maxQueensPerHive;
-        epochDuration = _epochDuration;
-        lockUpDuration = _lockUpDuration;
+        beeSkills = BeeSkills(beeSkills_);
+        rate = rate_;
+        maxWorkersPerHive = maxWorkersPerHive_;
+        maxQueensPerHive = maxQueensPerHive_;
+        epochDuration = epochDuration_;
+        lockUpDuration = lockUpDuration_;
         currentEpochTimestamp = block.timestamp;
         _pause();
     }
@@ -157,12 +160,12 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
     function stakeBee(uint256 tokenId, uint256 hiveId) external whenNotPaused returns (bool) {
         require(msg.sender == stakingToken.ownerOf(tokenId), "Error: Only token owner can stake");
         require(hiveId <= currentHiveId && hiveId > 0, "Error: Invalid hive ID");
-        
-        _tokenIdToHiveId[tokenId] = hiveId; 
+
+        _tokenIdToHiveId[tokenId] = hiveId;
         _lockUpExpirationTimestamp[tokenId] = block.timestamp + lockUpDuration;
         _updateBeeCountInHive(hiveId, beeSkills.getIsQueen(tokenId), true);
 
-        _deposit(tokenId);
+        _deposit(tokenId); //! Consider authorization of trasnfer to and from for NFTs to this vault contract
 
         return true;
     }
@@ -171,10 +174,10 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
     /// @dev The caller must be the owner of the NFT and the NFT must be currently staked.
     /// @param tokenId The unique identifier of the bee NFT to be unstaked and claimed.
     function unstakeBee(uint256 tokenId) external whenNotPaused returns (bool) {
-        // Check statement simultaneously checks ownership and if already staked 
+        // Check statement simultaneously checks ownership and if already staked
         require(_depositedIds[msg.sender].contains(tokenId), "Error: Not token owner or NFT not staked");
         require(_lockUpExpired(tokenId), "Lock-up period not expired");
-        
+
         _updateBeeCountInHive(_tokenIdToHiveId[tokenId], beeSkills.getIsQueen(tokenId), false);
         delete _tokenIdToHiveId[tokenId];
         _depositedIds[msg.sender].remove(tokenId);
@@ -202,7 +205,7 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
             }
         }
         // Mint new tokens
-        rewardToken.mintTo(msg.sender, totalRewards);
+        rewardToken.mintTo(msg.sender, totalRewards); //! Verify authorization for minting
 
         emit Claimed(msg.sender, block.timestamp);
     }
@@ -233,7 +236,7 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
         totalRewards = _earned(_depositedBlocks[tokenId], tokenId);
         //Transfer NFT and reward tokens
         stakingToken.safeTransferFrom(address(this), msg.sender, tokenId);
-        rewardToken.mintTo(msg.sender, totalRewards);
+        rewardToken.mintTo(msg.sender, totalRewards);                           //! Verify authorization for minting
 
         emit NFTUnstaked(msg.sender, tokenId, block.timestamp);
     }
@@ -243,7 +246,8 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
     /// @param tokenId Staked token id
     function _earned(uint256 timestamp, uint256 tokenId) private view returns (uint256) {
         if (timestamp == 0) return 0;
-        uint256 rateForTokenId = rate * _hiveIdToHiveTraits[_tokenIdToHiveId[tokenId]].rateMultiplier;
+        uint256 hiveRateMultiplier = _hiveIdToHiveTraits[_tokenIdToHiveId[tokenId]].rateMultiplier;
+        uint256 rateForTokenId = rate * hiveRateMultiplier;
         uint256 end;
         if (endTime == 0) {
             // endtime not set, which is likely
@@ -253,11 +257,8 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
         }
         if (timestamp > end) return 0;
 
-        // TODO: Decide on an appropriate time weighted bonus to give more weight to the amount of time staked
-        // Give more weight to time staked; 10 is just an arbitrary place holder for now
-        uint8 TIME_WEIGHTED_BONUS = 10;
-
         return ((end - timestamp) * rateForTokenId) * TIME_WEIGHTED_BONUS / epochDuration;
+
     }
 
     /// @notice Update bee count in Hive for every deposit and withdraw
@@ -327,6 +328,20 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
     /*  Owner Functions                                                           */
     /* -------------------------------------------------------------------------- */
 
+    /// @notice Update rate multiplier for each hive
+    /// @dev Rate multipliers gets updated once every epoch
+    /// @dev Needs to be called off-chain                           //! Off chain function
+    function updateAllHiveRateMultipliers() external onlyOwner {
+        require(block.timestamp >= currentEpochTimestamp + epochDuration, "Too soon to update");
+        uint256 length = allHiveIds.length();
+        uint256 hiveId;
+        // Set new rate multiplier for all existing hives
+        for (uint256 i = 0; i < length; i++) {
+            _hiveIdToHiveTraits[hiveId].rateMultiplier = _calculateHiveRateMultiplier(allHiveIds.at(i));
+        }
+        currentEpochTimestamp = block.timestamp;
+    }
+
     /// @notice Set the new token rewards rate
     /// @param newRate Emmission rate in wei
     function setRate(uint256 newRate) external onlyOwner {
@@ -337,20 +352,6 @@ contract HiveVaultV1 is Ownable, Pausable, ReentrancyGuard {
     /// @param newEndTime End time of token yield. Probably won't be needed
     function setEndTime(uint256 newEndTime) external onlyOwner {
         endTime = newEndTime;
-    }
-
-    /// @notice Update rate multiplier for each hive 
-    /// @dev Rate multipliers gets updated once every epoch
-    /// @dev Needs to be called off-chain
-    function updateAllHiveRateMultipliers() external onlyOwner {
-        require(block.timestamp >= currentEpochTimestamp + epochDuration, "Too soon to update");
-        uint256 length = allHiveIds.length();
-        uint256 hiveId;
-        // Set new rate multiplier for all existing hives
-        for (uint256 i = 0; i < length; i++) {
-            _hiveIdToHiveTraits[hiveId].rateMultiplier = _calculateHiveRateMultiplier(allHiveIds.at(i));
-        }
-        currentEpochTimestamp = block.timestamp;
     }
 
     /// @notice Set the new staking token contract address
