@@ -4,25 +4,33 @@ pragma solidity ^0.8.23;
 import {VRC25} from "@vrc25/contracts/VRC25.sol";
 import {VRC25Permit} from "@vrc25/contracts/VRC25Permit.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {Controllable} from "../utils/Controllable.sol";
 
-contract Honey is VRC25, VRC25Permit, ReentrancyGuard {
+contract Honey is VRC25, VRC25Permit, Controllable, ReentrancyGuard {
     error ExceededMaxSupply();
 
     uint256 public constant MAX_SUPPLY = 10e9 * 10e18;
 
     constructor() VRC25("HONEY", "HNY", 18) {}
 
-    /**
-     * @notice Issues `amount` tokens to the designated `address`.
-     */
-    function mintTo(address _to, uint256 _amount) external onlyOwner nonReentrant returns (bool) {
-        //! Need to guard against overflow if not using the latest compiler; will need SafeMath
-        if (totalSupply() + _amount > MAX_SUPPLY) {
+    /// @notice Mint new tokens to `to` with amount of `amount`.
+    function mintTo(address to, uint256 amount) external onlyController nonReentrant {
+        if (totalSupply() + amount > MAX_SUPPLY) {
             revert ExceededMaxSupply();
         }
+        super._mint(to, amount);
+    }
 
-        _mint(_to, _amount);
-        return true;
+    /// @notice Burn tokens from `from` with amount of `value`.
+    function burn(address from, uint256 value) external onlyController {
+        super._burn(from, value);
+  }
+
+    /// @notice Add or edit contract controllers.
+    /// @param addr An address to be added/edited.
+    /// @param state New controller state of address.
+    function setControllers(address addr, bool state) external onlyOwner {
+        super._setController(addr, state);
     }
 
     /**
