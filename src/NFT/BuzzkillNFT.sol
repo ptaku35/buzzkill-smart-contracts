@@ -19,7 +19,7 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     /* -------------------------------------------------------------------------- */
     /*                         State Variables                                    */
     /* -------------------------------------------------------------------------- */
-    uint256 private currentTokenId;
+    uint256 public currentTokenId;
     uint256 public constant TOTAL_SUPPLY = 10_000;
     uint256 public mintPrice;
 
@@ -42,10 +42,13 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     //! What's the best way to handle mint cost?
     //! Should there be a mint cost? How to handle air drops?
     function mintTo(address to) external payable whenNotPaused nonReentrant returns (uint256) {
-        if (msg.value != mintPrice) revert MintPriceNotPaid();
-        uint256 newTokenId = ++currentTokenId;
+        if (msg.sender != owner()) {
+            if (msg.value != mintPrice) revert MintPriceNotPaid();
+        }
 
+        uint256 newTokenId = ++currentTokenId;
         if (newTokenId > TOTAL_SUPPLY) revert MaxSupply();
+
         _safeMint(to, newTokenId);
 
         return newTokenId;
@@ -84,11 +87,11 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     }
 
     function pause() external onlyOwner {
-        _pause();
+        super._pause();
     }
 
     function unpause() external onlyOwner {
-        _unpause();
+        super._unpause();
     }
 
     /* -------------------------------------------------------------------------- */
