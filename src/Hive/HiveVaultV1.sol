@@ -46,7 +46,7 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
     uint256 private currentHiveId;
 
     /// @notice Rewards emitted per day staked in wei
-    uint256 private rate;                               //! Denominated in wei
+    uint256 private rate;                         
 
     /// @notice Endtime of token rewards
     uint256 private endTime;
@@ -164,8 +164,8 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
         _lockUpExpirationTimestamp[tokenId] = block.timestamp + lockUpDuration;
         _updateBeeCountInHive(hiveId, beeSkills.getIsQueen(tokenId), true);
 
-        _deposit(tokenId); //! Consider authorization of transfer to and from for NFTs to this vault contract
-
+        //! TODO: Consider authorization of transferring NFT
+        _deposit(tokenId); 
         return true;
     }
 
@@ -204,7 +204,7 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
             }
         }
         // Mint new tokens
-        rewardToken.mintTo(msg.sender, totalRewards); //! Verify authorization for minting
+        rewardToken.mintTo(msg.sender, totalRewards); 
 
         emit Claimed(msg.sender, block.timestamp);
     }
@@ -222,6 +222,9 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
         // Set timestamp for tokenId
         _depositedBlocks[tokenId] = block.timestamp;
         // Transfer the deposited token to this contract
+
+        //! TODO: Consider authorization of transferring NFT
+        stakingToken.approve(address(this), tokenId);                   
         stakingToken.safeTransferFrom(msg.sender, address(this), tokenId);
 
         emit NFTStaked(msg.sender, tokenId, block.timestamp);
@@ -235,7 +238,7 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
         totalRewards = _earned(_depositedBlocks[tokenId], tokenId);
         //Transfer NFT and reward tokens
         stakingToken.safeTransferFrom(address(this), msg.sender, tokenId);
-        rewardToken.mintTo(msg.sender, totalRewards);                           //! Verify authorization for minting
+        rewardToken.mintTo(msg.sender, totalRewards);                       
 
         emit NFTUnstaked(msg.sender, tokenId, block.timestamp);
     }
@@ -294,6 +297,7 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
         uint256 queens = hive.numberOfQueensStaked;
         uint256 workers = hive.numberOfWorkersStaked;
         newRateMultiplier = queens * QUEEN_TO_WORKER_RATIO + workers;
+        // TODO: Add level from beeTraits
     }
 
     /* -------------------------------------------------------------------------- */
@@ -323,13 +327,18 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
         }
     }
 
+    /// @notice Retrieve Hive traits for a given hive Id
+    function getHiveTraits(uint256 hiveId) external view returns (HiveTraits memory) {
+        return _hiveIdToHiveTraits[hiveId];
+    }
+
     /* -------------------------------------------------------------------------- */
     /*  Owner Functions                                                           */
     /* -------------------------------------------------------------------------- */
 
     /// @notice Update rate multiplier for each hive
     /// @dev Rate multipliers gets updated once every epoch
-    /// @dev Needs to be called off-chain                           //! Off chain function
+    /// @dev Needs to be called off-chain                         
     function updateAllHiveRateMultipliers() external onlyOwner {
         require(block.timestamp >= currentEpochTimestamp + epochDuration, "Too soon to update");
         uint256 length = allHiveIds.length();
@@ -339,6 +348,12 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
             _hiveIdToHiveTraits[hiveId].rateMultiplier = _calculateHiveRateMultiplier(allHiveIds.at(i));
         }
         currentEpochTimestamp = block.timestamp;
+    }
+
+    /// @notice Update rate multiplier for a single hive
+    /// @dev Used for raiding mechanics in BeeSkills.sol
+    function updateSingleHiveRateMultiplier(uint256 hiveId, uint256 newRateMultiplier) external onlyOwner {
+        _hiveIdToHiveTraits[hiveId].rateMultiplier = newRateMultiplier;
     }
 
     /// @notice Set the new token rewards rate

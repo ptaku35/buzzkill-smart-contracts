@@ -8,7 +8,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 
 contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     /* -------------------------------------------------------------------------- */
-    /*                            Errors                                          */
+    /*  Errors                                                                    */
     /* -------------------------------------------------------------------------- */
     error MintPriceTooLow();
     error MintPriceTooHigh();
@@ -17,30 +17,30 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     error WithdrawTransfer();
 
     /* -------------------------------------------------------------------------- */
-    /*                         State Variables                                    */
+    /* State Variables                                                            */
     /* -------------------------------------------------------------------------- */
     uint256 public currentTokenId;
     uint256 public constant TOTAL_SUPPLY = 10_000;
     uint256 public mintPrice;
 
     /* -------------------------------------------------------------------------- */
-    /*                           Constructor                                      */
+    /*  Constructor                                                               */
     /* -------------------------------------------------------------------------- */
 
     constructor(uint256 _mintPrice) {
-        if (_mintPrice > 0.00044 ether) revert MintPriceTooLow(); //! Need a modifier here for this and the updateMintPrice function
+        // TODO: Need a modifier here for this and the updateMintPrice function
+        if (_mintPrice > 0.00044 ether) revert MintPriceTooLow();
         if (_mintPrice > 5 ether) revert MintPriceTooHigh();
         __VRC725_init("Buzzkill", "BZK", msg.sender);
         mintPrice = _mintPrice;
     }
 
     /* -------------------------------------------------------------------------- */
-    /*                         Logic Functions                                    */
+    /*  Logic Functions                                                           */
     /* -------------------------------------------------------------------------- */
 
-    //??? Considering adding a uint256 parameter so the user has the option to purchase as many as they want
-    //! What's the best way to handle mint cost?
-    //! Should there be a mint cost? How to handle air drops?
+    // TODO: Considering adding a uint256 parameter so the user has the option to purchase as many as they want
+    // TODO: Consider best way to handle mint cost
     function mintTo(address to) external payable whenNotPaused nonReentrant returns (uint256) {
         if (msg.sender != owner()) {
             if (msg.value != mintPrice) revert MintPriceNotPaid();
@@ -59,12 +59,13 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
         _burn(tokenId);
     }
 
+    // TODO: Add base URI
     function _baseURI() internal pure override returns (string memory) {
         return "ipfs://<SOME HASH HERE>/";
     }
 
     /* -------------------------------------------------------------------------- */
-    /*                         Owner Functions                                    */
+    /*  Owner Functions                                                           */
     /* -------------------------------------------------------------------------- */
 
     function withdrawPayments(address payable payee) external onlyOwner nonReentrant {
@@ -95,7 +96,7 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     }
 
     /* -------------------------------------------------------------------------- */
-    /*                         Required Overrides                                 */
+    /*  Required Overrides                                                        */
     /* -------------------------------------------------------------------------- */
 
     /// @dev Required override from VRC725.
