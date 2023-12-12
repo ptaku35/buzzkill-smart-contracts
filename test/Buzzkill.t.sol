@@ -2,7 +2,7 @@
 pragma solidity ^0.8.23;
 
 import {Test} from "lib/forge-std/src/Test.sol";
-import {BuzzkillNFT} from "../src/BuzzkillNFT.sol";
+import {BuzzkillNFT} from "../src/NFT/BuzzkillNFT.sol";
 
 contract BuzzkillTest is Test {
     BuzzkillNFT private buzzkill;
