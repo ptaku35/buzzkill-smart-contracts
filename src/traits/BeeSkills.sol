@@ -20,9 +20,6 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
     /// @notice Cost to raid a hive in Honey
     uint256 public constant RAIDING_COST = 10 ether;
 
-    /// @notice owner of this contract
-    address payable owner;
-
     // TODO: Change all of these to contracts to interfaces
     /// @notice Hive contract address
     HiveVaultV1 hiveVault;
@@ -77,7 +74,6 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
     constructor(address payable owner_, address hiveVault_, address buzzKillNFT, address honey, address beeSkills_)
         Ownable(owner_)
     {
-        owner = owner_;
         hiveVault = HiveVaultV1(hiveVault_);
         stakingToken = BuzzkillNFT(buzzKillNFT);
         rewardToken = Honey(honey);
@@ -119,7 +115,7 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
         onlyTokenOwner(tokenId)
         whenNotPaused
     {
-        // TODO: Verify energy or some mechanic to consume for adding attack
+        // TODO: Verify energy or some mechanic to consume for adding defense
         _tokenIdToBeeTraits[tokenId].defense += addDefense;
     }
 
@@ -129,7 +125,7 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
         onlyTokenOwner(tokenId)
         whenNotPaused
     {
-        // TODO: Verify energy or some mechanic to consume for adding attack
+        // TODO: Verify energy or some mechanic to consume for adding forage
         _tokenIdToBeeTraits[tokenId].foraging += addForaging;
     }
 
@@ -153,7 +149,7 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
 
         //! TODO: Need to verify this contract has authority to make transfer, will need proper allowance implementation
         // Transfer raiding cost from user
-        rewardToken.transferFrom(msg.sender, owner, RAIDING_COST);
+        rewardToken.transferFrom(msg.sender, owner(), RAIDING_COST);
 
         // TODO: Update BeeTraits such as cooldown time or energy
 
@@ -202,7 +198,6 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
     // TODO:
     function _calculateIsRaidSuccessful(uint256 attack, uint256 defense) private view returns (bool) {}
     // RN needs to be less than the attack - defense to be successful
-
 
     // TODO:
     function _calculateRaidReward() private view returns (uint256) {}

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-
 /// @title Controllable
 abstract contract Controllable {
     /// @notice address => is controller
@@ -13,7 +12,7 @@ abstract contract Controllable {
         _;
     }
 
-    /// @notice Check if address is a controller 
+    /// @notice Check if address is a controller
     function isController(address addr) public view returns (bool) {
         return _isController[addr];
     }

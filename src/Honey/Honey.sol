@@ -24,7 +24,7 @@ contract Honey is VRC25, VRC25Permit, Controllable, ReentrancyGuard {
     /// @notice Burn tokens from `from` with amount of `value`.
     function burn(address from, uint256 value) external onlyController {
         super._burn(from, value);
-  }
+    }
 
     /// @notice Add or edit contract controllers.
     /// @param addr An address to be added/edited.
@@ -33,11 +33,9 @@ contract Honey is VRC25, VRC25Permit, Controllable, ReentrancyGuard {
         super._setController(addr, state);
     }
 
-    /**
-     * @dev Required override function for VRC25
-     * @notice Calculate fee required for action related to this token
-     * @param value Amount of fee
-     */
+    /// @dev Required override function for VRC25
+    /// @notice Calculate fee required for action related to this token
+    /// @param value Amount of fee
     function _estimateFee(uint256 value) internal view override returns (uint256) {
         return value + minFee();
     }
