@@ -45,15 +45,12 @@ contract HiveVaultV1Basic is Ownable, Pausable, ReentrancyGuard {
     /*  Constructor                                                               */
     /* -------------------------------------------------------------------------- */
 
-    constructor(
-        address initialOwner,
-        address buzzkillNFT,
-        address honey,
-        uint256 initialRewardsRate
-    ) Ownable(initialOwner) {
+    constructor(address initialOwner, address buzzkillNFT, address honey, uint256 initialRewardsRate)
+        Ownable(initialOwner)
+    {
         stakingToken = BuzzkillNFT(buzzkillNFT);
         rewardToken = Honey(honey);
-        rate = initialRewardsRate;        
+        rate = initialRewardsRate;
         _pause();
     }
 
@@ -80,7 +77,7 @@ contract HiveVaultV1Basic is Ownable, Pausable, ReentrancyGuard {
         require(_depositedIds[msg.sender].contains(tokenId), "Error: Not token owner");
         // Calculate rewards
         totalRewards = _earned(_depositedBlocks[msg.sender][tokenId], tokenId);
-        
+
         // Update mappings
         _depositedIds[msg.sender].remove(tokenId);
         delete _depositedBlocks[msg.sender][tokenId];
@@ -129,7 +126,8 @@ contract HiveVaultV1Basic is Ownable, Pausable, ReentrancyGuard {
         if (timestamp == 0) return 0;
         uint256 rateForTokenId = rate + _rateModifiers[tokenId];
         uint256 end;
-        if (endTime == 0) { // endtime not set, which is likely
+        if (endTime == 0) {
+            // endtime not set, which is likely
             end = block.timestamp;
         } else {
             end = Math.min(block.timestamp, endTime);

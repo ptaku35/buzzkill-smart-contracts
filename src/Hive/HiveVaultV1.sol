@@ -26,7 +26,6 @@ import {IERC721Receiver} from "@vrc725/contracts/interfaces/IERC721Receiver.sol"
  */
 
 //
-
 contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
     using EnumerableSet for EnumerableSet.UintSet;
 
@@ -46,7 +45,7 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
     uint256 private currentHiveId;
 
     /// @notice Rewards emitted per day staked in wei
-    uint256 private rate;                         
+    uint256 private rate;
 
     /// @notice Endtime of token rewards
     uint256 private endTime;
@@ -165,7 +164,7 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
         _updateBeeCountInHive(hiveId, beeSkills.getIsQueen(tokenId), true);
 
         //! TODO: Consider authorization of transferring NFT
-        _deposit(tokenId); 
+        _deposit(tokenId);
         return true;
     }
 
@@ -204,7 +203,7 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
             }
         }
         // Mint new tokens
-        rewardToken.mintTo(msg.sender, totalRewards); 
+        rewardToken.mintTo(msg.sender, totalRewards);
 
         emit Claimed(msg.sender, block.timestamp);
     }
@@ -224,7 +223,7 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
         // Transfer the deposited token to this contract
 
         //! TODO: Consider authorization of transferring NFT
-        stakingToken.approve(address(this), tokenId);                   
+        stakingToken.approve(address(this), tokenId);
         stakingToken.safeTransferFrom(msg.sender, address(this), tokenId);
 
         emit NFTStaked(msg.sender, tokenId, block.timestamp);
@@ -238,7 +237,7 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
         totalRewards = _earned(_depositedBlocks[tokenId], tokenId);
         //Transfer NFT and reward tokens
         stakingToken.safeTransferFrom(address(this), msg.sender, tokenId);
-        rewardToken.mintTo(msg.sender, totalRewards);                       
+        rewardToken.mintTo(msg.sender, totalRewards);
 
         emit NFTUnstaked(msg.sender, tokenId, block.timestamp);
     }
@@ -260,7 +259,6 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
         if (timestamp > end) return 0;
 
         return ((end - timestamp) * rateForTokenId) * TIME_WEIGHTED_BONUS / epochDuration;
-
     }
 
     /// @notice Update bee count in Hive for every deposit and withdraw
@@ -338,7 +336,7 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
 
     /// @notice Update rate multiplier for each hive
     /// @dev Rate multipliers gets updated once every epoch
-    /// @dev Needs to be called off-chain                         
+    /// @dev Needs to be called off-chain
     function updateAllHiveRateMultipliers() external onlyOwner {
         require(block.timestamp >= currentEpochTimestamp + epochDuration, "Too soon to update");
         uint256 length = allHiveIds.length();
@@ -447,9 +445,18 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
 
     /// @notice allow vault contract (address(this)) to receive ERC721 tokens
     function onERC721Received(
-        address /**operator*/,
-        address /**from*/,
-        uint256 /**amount*/,
+        address,
+        /**
+         * operator
+         */
+        address,
+        /**
+         * from
+         */
+        uint256,
+        /**
+         * amount
+         */
         bytes calldata //data
     ) external pure override returns (bytes4) {
         return IERC721Receiver.onERC721Received.selector;
