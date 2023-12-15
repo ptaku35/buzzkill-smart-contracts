@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3bad8a402b97ef0b06149720b31a1e27de9aecf4
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
@@ -15,19 +19,32 @@ contract HoneyTest is DSTest {
         honey.setControllers(deployer, true); // Assuming deployer is the owner
     }
 
+<<<<<<< HEAD
     function test_MintTo() public {
+=======
+    function testMintTo() public {
+>>>>>>> 3bad8a402b97ef0b06149720b31a1e27de9aecf4
         uint256 amount = 1e18; // 1 HONEY
         honey.mintTo(user1, amount);
         assertEq(honey.balanceOf(user1), amount);
         assertEq(honey.totalSupply(), amount);
     }
 
+<<<<<<< HEAD
     function testFail_MintToExceedMaxSupply() public {
         uint256 amount = honey.MAX_SUPPLY() + 1;
           honey.mintTo(user1, amount); // Should fail
     }
 
     function test_Burn() public {
+=======
+    function testFailMintToExceedMaxSupply() public {
+        uint256 amount = honey.MAX_SUPPLY() + 1;
+        honey.mintTo(user1, amount); // Should fail
+    }
+
+    function testBurn() public {
+>>>>>>> 3bad8a402b97ef0b06149720b31a1e27de9aecf4
         uint256 mintAmount = 1e18;
         uint256 burnAmount = 1e17; // 0.1 HONEY
         honey.mintTo(user1, mintAmount);
@@ -99,4 +116,7 @@ contract HoneyTest is DSTest {
 
 }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3bad8a402b97ef0b06149720b31a1e27de9aecf4
