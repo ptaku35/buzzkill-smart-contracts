@@ -100,13 +100,49 @@ contract BuzzkillTest is Test {
     /*  Test Burn                                                                 */
     /* -------------------------------------------------------------------------- */
 
-    // Test burn
+    // Test burning a token
+    function test_CanBurnToken() public {
+        nft.mintTo{value: 1 ether}(USER);
+        nft.burn(1);
+        assertEq(nft.balanceOf(USER), 0);
+    }
+
+    // Test burning a non-existent token
+    function testFail_BurnNonExistentToken() public {
+        nft.burn(1);
+    }
+
+    // Test burning a token not owned by owner
+    function testFail_BurnTokenNotOwned() public {
+        nft.mintTo{value: 1 ether}(address(this));
+        vm.prank(USER);
+        nft.burn(1);
+    }
 
     /* -------------------------------------------------------------------------- */
     /*  Test Transfers                                                            */
     /* -------------------------------------------------------------------------- */
 
-    // Test transfers
+    // Test successful transfer
+    function test_CanTransferToken() public {
+        nft.mintTo{value: 1 ether}(USER);
+        vm.prank(USER);
+        nft.safeTransferFrom(USER, address(1), 1);
+        assertEq(nft.balanceOf(address(1)), 1);
+    }
+
+    // Test transfer of non-existent token
+    function testFail_TransferNonExistentToken() public {
+        vm.prank(USER);
+        nft.safeTransferFrom(USER, address(this), 1);
+    }
+
+    // Test transfer from not owner
+    function testFail_TransferFromNotOwner() public {
+        nft.mintTo{value: 1 ether}(address(this));
+        vm.prank(USER);
+        nft.safeTransferFrom(address(this), USER, 1);
+    }
 
     /* -------------------------------------------------------------------------- */
     /*  Test Approvals                                                            */

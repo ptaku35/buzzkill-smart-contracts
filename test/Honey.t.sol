@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import "ds-test/test.sol";
-import "../src/Honey/Honey.sol";
+import {Test, console, StdStorage, stdStorage} from "forge-std/Test.sol";
+import {Honey} from "../src/Honey/Honey.sol";
 
-contract HoneyTest is DSTest {
+contract HoneyTest is Test {
     Honey honey;
     address deployer;
     address user1 = address(0x123);
