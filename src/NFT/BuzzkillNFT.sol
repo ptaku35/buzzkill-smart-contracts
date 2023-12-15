@@ -22,8 +22,8 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     error MintPriceTooLow();
     error MintPriceTooHigh();
     error MintPriceNotPaid();
-    error MaxSupply();
-    error WithdrawTransfer();
+    error MaxSupplyExceeded();
+    error WithdrawTransferFailed();
 
     /* -------------------------------------------------------------------------- */
     /* State Variables                                                            */
@@ -52,12 +52,12 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     // TODO: Considering adding a uint256 parameter so the user has the option to purchase as many as they want
     // TODO: Consider best way to handle mint cost
     function mintTo(address to) external payable whenNotPaused nonReentrant returns (uint256) {
-        if (msg.sender != owner()) {
+        if (msg.sender != owner()) { // Will delete this requirement on mainnet
             if (msg.value != mintPrice) revert MintPriceNotPaid();
         }
 
         uint256 newTokenId = ++currentTokenId;
-        if (newTokenId > TOTAL_SUPPLY) revert MaxSupply();
+        if (newTokenId > TOTAL_SUPPLY) revert MaxSupplyExceeded();
 
         _safeMint(to, newTokenId);
 
@@ -81,8 +81,7 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     function withdrawPayments(address payable payee) external onlyOwner nonReentrant {
         uint256 balance = address(this).balance;
         (bool transferTx,) = payee.call{value: balance}("");
-
-        if (!transferTx) revert WithdrawTransfer();
+        if (!transferTx) revert WithdrawTransferFailed();
     }
 
     /// @notice Updates the new price of minting a NFT

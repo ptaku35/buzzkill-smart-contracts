@@ -5,9 +5,7 @@ import {Script} from "lib/forge-std/src/Script.sol";
 
 import {BuzzkillNFT} from "src/NFT/BuzzkillNFT.sol";
 
-
 contract DeployBuzzkill is Script {
-
     /// @notice The main script entrypoint
     /// @return buzzkill The deployed contract
     function run() external returns (BuzzkillNFT buzzkill) {

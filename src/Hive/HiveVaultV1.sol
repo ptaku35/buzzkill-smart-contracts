@@ -223,7 +223,6 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
         // Transfer the deposited token to this contract
 
         //! TODO: Consider authorization of transferring NFT
-        stakingToken.approve(address(this), tokenId);
         stakingToken.safeTransferFrom(msg.sender, address(this), tokenId);
 
         emit NFTStaked(msg.sender, tokenId, block.timestamp);
