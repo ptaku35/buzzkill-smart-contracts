@@ -15,19 +15,19 @@ contract HoneyTest is DSTest {
         honey.setControllers(deployer, true); // Assuming deployer is the owner
     }
 
-    function testMintTo() public {
+    function test_MintTo() public {
         uint256 amount = 1e18; // 1 HONEY
         honey.mintTo(user1, amount);
         assertEq(honey.balanceOf(user1), amount);
         assertEq(honey.totalSupply(), amount);
     }
 
-    function testFailMintToExceedMaxSupply() public {
-        uint256 amount = Honey.MAX_SUPPLY() + 1;
-        honey.mintTo(user1, amount); // Should fail
+    function testFail_MintToExceedMaxSupply() public {
+        uint256 amount = honey.MAX_SUPPLY() + 1;
+          honey.mintTo(user1, amount); // Should fail
     }
 
-    function testBurn() public {
+    function test_Burn() public {
         uint256 mintAmount = 1e18;
         uint256 burnAmount = 1e17; // 0.1 HONEY
         honey.mintTo(user1, mintAmount);

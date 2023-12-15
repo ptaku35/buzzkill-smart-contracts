@@ -10,3 +10,5 @@ optimizer_runs = 200
 # gas_reports = ["*"]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+
+remappings = ["@openzeppelin-contracts/=lib/openzeppelin-contracts/"]
