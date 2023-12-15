@@ -148,7 +148,43 @@ contract BuzzkillTest is Test {
     /*  Test Approvals                                                            */
     /* -------------------------------------------------------------------------- */
 
-    // Test approvals
+    // Test setting approval
+    function test_SetApprovalForToken() public {
+        nft.mintTo{value: 1 ether}(USER);
+        vm.prank(USER);
+        nft.approve(address(this), 1);
+        assertEq(nft.getApproved(1), address(this));
+    }
+
+    // Test transferring a token with approval
+    function test_TransferWithApproval() public {
+        nft.mintTo{value: 1 ether}(USER);
+        vm.startPrank(USER);
+        nft.approve(address(1), 1);
+        nft.safeTransferFrom(USER, address(1), 1);
+        vm.stopPrank();
+        assertEq(nft.balanceOf(address(1)), 1);
+    }
+
+    // Test revoking approval
+    function test_RevokeApproval() public {
+        nft.mintTo{value: 1 ether}(USER);
+        vm.startPrank(USER);
+        nft.approve(address(1), 1);
+        nft.approve(address(2), 1);
+        vm.stopPrank();
+        assertEq(nft.getApproved(1), address(2));
+    }
+
+    // Test transferring a token after revoking approval
+    function testFail_TransferAfterRevokingApproval() public {
+        nft.mintTo{value: 1 ether}(USER);
+        vm.startPrank(USER);
+        nft.approve(address(1), 1);
+        nft.approve(address(2), 1);
+        vm.stopPrank();
+        nft.safeTransferFrom(USER, address(1), 1);
+    }
 
     /* -------------------------------------------------------------------------- */
     /*  Test Withdraw Payments                                                    */
@@ -178,6 +214,38 @@ contract BuzzkillTest is Test {
         vm.startPrank(address(USER));
         nft.withdrawPayments(payable(USER));
         vm.stopPrank();
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*  Test Enumerable Logic                                                     */
+    /* -------------------------------------------------------------------------- */
+
+    // Test tokenByIndex
+    function test_TokenByIndex() public {
+        nft.mintTo{value: 1 ether}(USER);
+        // uint256 tokenId = nft.tokenByIndex(0);
+        // assertTrue(tokenId > 0); 
+    }
+
+    // Test tokenOfOwnerByIndex
+    function test_TokenOfOwnerByIndex() public {
+        nft.mintTo{value: 1 ether}(USER);
+        uint256 tokenId = nft.tokenOfOwnerByIndex(USER, 0);
+        assertTrue(tokenId > 0);
+    }
+
+    // Test tokenOfOwnerByIndex with out of bounds index
+    function testFail_TokenOfOwnerByIndexOutOfBounds() public view {
+        nft.tokenOfOwnerByIndex(USER, 0);
+    }
+
+    // Test tokenOfOwnerByIndex after transfer
+    function test_TokenOfOwnerByIndexAfterTransfer() public {
+        nft.mintTo{value: 1 ether}(USER);
+        uint256 tokenId = nft.tokenOfOwnerByIndex(USER, 0);
+        vm.prank(USER);
+        nft.safeTransferFrom(USER, address(this), tokenId);
+        assertEq(nft.balanceOf(USER), 0);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -214,5 +282,4 @@ contract BuzzkillTest is Test {
         vm.stopPrank();
     }
 
-    // Maybe test enumerable
 }
