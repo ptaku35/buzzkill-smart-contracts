@@ -40,3 +40,5 @@ contract Honey is VRC25, VRC25Permit, Controllable, ReentrancyGuard {
         return value + minFee();
     }
 }
+
+
