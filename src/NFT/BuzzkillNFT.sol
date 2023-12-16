@@ -71,7 +71,7 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
 
     // TODO: Add base URI
     function _baseURI() internal pure override returns (string memory) {
-        return "ipfs://<SOME HASH HERE>/";
+        return "ipfs://bafybeiayhxazprulpurcaz26y74slp3lfayyeu3n547esianwwpf6ha55e/";
     }
 
     /* -------------------------------------------------------------------------- */
