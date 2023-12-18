@@ -46,6 +46,12 @@ endif
 deployBuzzkill:
 	@forge script script/DeployBuzzkill.s.sol:DeployBuzzkill $(NETWORK_ARGS)
 
+deployHoney:
+	@forge script script/DeployHoney.s.sol:DeployHoney $(NETWORK_ARGS)
+
+deployHiveVault:
+	@forge script script/DeployHiveVault.s.sol:DeployHiveVault $(NETWORK_ARGS)
+
 mint:
 	@forge script script/Interactions.s.sol:MintBasicNft $(NETWORK_ARGS)
 
