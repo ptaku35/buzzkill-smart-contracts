@@ -12,7 +12,7 @@ contract DeployBuzzkill is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
 
         vm.startBroadcast(deployerPrivateKey);
-        buzzkill = new BuzzkillNFT(0.0073 ether);
+        buzzkill = new BuzzkillNFT(1 ether);
         vm.stopBroadcast();
     }
 }
