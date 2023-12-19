@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import {Script} from "lib/forge-std/src/Script.sol";
+import {Script, console} from "lib/forge-std/src/Script.sol";
 
 import {BuzzkillNFT} from "src/NFT/BuzzkillNFT.sol";
 
@@ -14,5 +14,7 @@ contract DeployBuzzkill is Script {
         vm.startBroadcast(deployerPrivateKey);
         buzzkill = new BuzzkillNFT(1 ether);
         vm.stopBroadcast();
+
+        console.log("NFT Addres: ", address(buzzkill));
     }
 }
