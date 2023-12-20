@@ -15,6 +15,6 @@ contract DeployBuzzkill is Script {
         buzzkill = new BuzzkillNFT(1 ether);
         vm.stopBroadcast();
 
-        console.log("NFT Addres: ", address(buzzkill));
+        console.log("NFT Address: ", address(buzzkill));
     }
 }
