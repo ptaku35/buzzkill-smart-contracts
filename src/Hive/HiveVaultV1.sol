@@ -6,10 +6,10 @@ import {BuzzkillNFT} from "../NFT/BuzzkillNFT.sol";
 import {BeeSkills} from "../traits/BeeSkills.sol";
 import {Pausable} from "@openzeppelin-contracts/contracts/utils/Pausable.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {IERC721Receiver} from "@vrc725/contracts/interfaces/IERC721Receiver.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /**
  * @title HiveVaultV1
@@ -163,7 +163,6 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
         _lockUpExpirationTimestamp[tokenId] = block.timestamp + lockUpDuration;
         _updateBeeCountInHive(hiveId, beeSkills.getIsQueen(tokenId), true);
 
-        //! TODO: Consider authorization of transferring NFT
         _deposit(tokenId);
         return true;
     }
@@ -182,7 +181,6 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
         delete _depositedBlocks[tokenId];
 
         _withdraw(tokenId);
-
         return true;
     }
 
@@ -376,6 +374,12 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
     function setNewRewardTokenAddress(address newRewardTokenAddress) external onlyOwner {
         rewardToken = Honey(newRewardTokenAddress);
     }
+    
+    /// @notice Set the new Beeskills contract address
+    /// @param newBeeskillsAddress New reward token address
+    function setNewBeeskillsAddress(address newBeeskillsAddress) external onlyOwner {
+        beeSkills = BeeSkills(newBeeskillsAddress);
+    }
 
     /// @notice Set new limit for worker bees per hive
     /// @param newMaxWorkersPerHive New limit for worker bees per hive
@@ -444,18 +448,9 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
 
     /// @notice allow vault contract (address(this)) to receive ERC721 tokens
     function onERC721Received(
-        address,
-        /**
-         * operator
-         */
-        address,
-        /**
-         * from
-         */
-        uint256,
-        /**
-         * amount
-         */
+        address, // operator
+        address, // from
+        uint256, // amount
         bytes calldata //data
     ) external pure override returns (bytes4) {
         return IERC721Receiver.onERC721Received.selector;

@@ -51,7 +51,6 @@ contract HiveVaultV1Basic is Ownable, Pausable, ReentrancyGuard {
         stakingToken = BuzzkillNFT(buzzkillNFT);
         rewardToken = Honey(honey);
         rate = initialRewardsRate;
-        _pause();
     }
 
     /* -------------------------------------------------------------------------- */
