@@ -7,7 +7,6 @@ import {VRC725Enumerable} from "@vrc725/contracts/extensions/VRC725Enumerable.so
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 
-
 // 888888b.   888     888 8888888888P 8888888888P 888    d8P  8888888 888      888
 // 888  "88b  888     888       d88P        d88P  888   d8P     888   888      888
 // 888  .88P  888     888      d88P        d88P   888  d8P      888   888      888
@@ -19,8 +18,8 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 
 
 
-
 contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
+
     /* -------------------------------------------------------------------------- */
     /*  Errors                                                                    */
     /* -------------------------------------------------------------------------- */
@@ -44,8 +43,8 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     constructor(uint256 _mintPrice) {
         // TODO: Need a modifier here for this and the updateMintPrice function
         // TODO: Maybe need to consider more strongly about the mint price requirements
-        if (_mintPrice < 0.00044 ether) revert MintPriceTooLow();
-        if (_mintPrice > 5 ether) revert MintPriceTooHigh();
+        if (_mintPrice < 1 ether) revert MintPriceTooLow(); // ether is just a conversion to 10e18, not literally ether
+        if (_mintPrice > 100 ether) revert MintPriceTooHigh();
         __VRC725_init("Buzzkill", "BZK", msg.sender);
         mintPrice = _mintPrice;
     }
