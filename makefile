@@ -52,9 +52,18 @@ deployHoney:
 deployHiveVault:
 	@forge script script/DeployHiveVault.s.sol:DeployHiveVault $(NETWORK_ARGS)
 
+deployBeeSkills:
+	@forge script script/DeployBeeSkills.s.sol:DeployBeeSkills $(NETWORK_ARGS)
+
 mint:
-	@forge script script/Interactions.s.sol:MintBasicNft $(NETWORK_ARGS)
+	@forge script script/interactions.s.sol:MintNFT $(NETWORK_ARGS)
 
 # These two commands are the exact same:
 # $ forge script script/DeployBuzzkill.s.sol:DeployBuzzkill --rpc-url $TOMO_RPC_URL --private-key $PRIVATE_KEY --legacy --broadcast --verify --etherscan-api-key $(VICTION_API_KEY) -vvvv
 # $ make deployBuzzkill ARGS="--network tomochain"
+
+# Minting
+# cast send 0x1a8987e126B572c3De795180A86fCAb643543f92 "mintTo(address)" <To address> --private-key 0xac361b57907c5f34bfaef8dc2edb52d0cc68a0388e0d3afe0336db761dea26ec --rpc-url https://rpc.testnet.tomochain.com --value 1ether --legacy
+
+# Cast call example
+# cast call 0x1a8987e126B572c3De795180A86fCAb643543f92 "ownerOf(uint256)" 2 --rpc-url https://rpc.testnet.tomochain.com --legacy
