@@ -88,6 +88,9 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
     /// @notice Mapping of hive to its hive traits
     mapping(uint256 hiveId => HiveTraits hiveTraits) public _hiveIdToHiveTraits;
 
+    // TODO: Add mappping for hive IDs to an array of staked Ids OR replace _tokenIdToHiveId somehow
+    mapping(uint256 hiveId => EnumerableSet.UintSet stakedTokenIds) private _hiveIdToStakedTokens;
+
     /// @notice Mapping of staking token to its staked hive
     mapping(uint256 tokenId => uint256 hiveId) public _tokenIdToHiveId;
 
@@ -145,7 +148,7 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
         epochDuration = epochDuration_;
         lockUpDuration = lockUpDuration_;
         currentEpochTimestamp = block.timestamp;
-        _pause();
+        // _pause();
     }
 
     /* -------------------------------------------------------------------------- */
@@ -161,6 +164,7 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
 
         _tokenIdToHiveId[tokenId] = hiveId;
         _lockUpExpirationTimestamp[tokenId] = block.timestamp + lockUpDuration;
+        _hiveIdToStakedTokens[hiveId].add(tokenId);
         _updateBeeCountInHive(hiveId, beeSkills.getIsQueen(tokenId), true);
 
         _deposit(tokenId);
@@ -175,7 +179,10 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
         require(_depositedIds[msg.sender].contains(tokenId), "Error: Not token owner or NFT not staked");
         require(_lockUpExpired(tokenId), "Lock-up period not expired");
 
-        _updateBeeCountInHive(_tokenIdToHiveId[tokenId], beeSkills.getIsQueen(tokenId), false);
+        uint256 hiveId = _tokenIdToHiveId[tokenId];
+
+        _updateBeeCountInHive(hiveId, beeSkills.getIsQueen(tokenId), false);
+        _hiveIdToStakedTokens[hiveId].remove(tokenId);
         delete _tokenIdToHiveId[tokenId];
         _depositedIds[msg.sender].remove(tokenId);
         delete _depositedBlocks[tokenId];
@@ -216,11 +223,11 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
         // Add the new deposit to the mapping and check that NFT is not already staked
         bool success = _depositedIds[msg.sender].add(tokenId);
         require(success, "NFT already staked");
+
         // Set timestamp for tokenId
         _depositedBlocks[tokenId] = block.timestamp;
-        // Transfer the deposited token to this contract
 
-        //! TODO: Consider authorization of transferring NFT
+        // Transfer the deposited token to this contract
         stakingToken.safeTransferFrom(msg.sender, address(this), tokenId);
 
         emit NFTStaked(msg.sender, tokenId, block.timestamp);
@@ -232,6 +239,7 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
         // Calculate rewards
         uint256 totalRewards;
         totalRewards = _earned(_depositedBlocks[tokenId], tokenId);
+        
         //Transfer NFT and reward tokens
         stakingToken.safeTransferFrom(address(this), msg.sender, tokenId);
         rewardToken.mintTo(msg.sender, totalRewards);
@@ -325,6 +333,20 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
     /// @notice Retrieve Hive traits for a given hive Id
     function getHiveTraits(uint256 hiveId) external view returns (HiveTraits memory) {
         return _hiveIdToHiveTraits[hiveId];
+    }
+
+    /// @notice Get all the token Ids staked in a hive
+    /// @dev Need to retrieve a list of staked tokens in a hive for the frontend display
+    /// @param hiveId Hive to retrieve all token IDs staked
+    function getStakedTokensInAHive(uint256 hiveId) external view returns(uint256[] memory) {
+        uint256 length = _hiveIdToStakedTokens[hiveId].length();
+        uint256[] memory stakedTokens = new uint256[](length);
+
+        for (uint256 i = 0; i < length; i++) {
+            stakedTokens[i] = _hiveIdToStakedTokens[hiveId].at(i);
+        }
+
+        return stakedTokens;
     }
 
     /* -------------------------------------------------------------------------- */
