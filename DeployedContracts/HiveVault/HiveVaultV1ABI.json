@@ -1,743 +1,762 @@
 [
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "initialOwner",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "buzzkillNFT",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "honey",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "beeSkills_",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "rate_",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "maxQueensPerHive_",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "maxWorkersPerHive_",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "epochDuration_",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "lockUpDuration_",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "nonpayable",
-      "type": "constructor"
-    },
-    {
-      "inputs": [],
-      "name": "EnforcedPause",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "ExpectedPause",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "owner",
-          "type": "address"
-        }
-      ],
-      "name": "OwnableInvalidOwner",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "OwnableUnauthorizedAccount",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "ReentrancyGuardReentrantCall",
-      "type": "error"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "nftOwner",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        }
-      ],
-      "name": "Claimed",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "owner",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "value",
-          "type": "uint256"
-        }
-      ],
-      "name": "NFTStaked",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "owner",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "value",
-          "type": "uint256"
-        }
-      ],
-      "name": "NFTUnstaked",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "previousOwner",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "newOwner",
-          "type": "address"
-        }
-      ],
-      "name": "OwnershipTransferred",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "Paused",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "Unpaused",
-      "type": "event"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "hiveId",
-          "type": "uint256"
-        }
-      ],
-      "name": "_hiveIdToHiveTraits",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "hiveId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "rateMultiplier",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "numberOfQueensStaked",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "numberOfWorkersStaked",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "hiveDefense",
-          "type": "uint256"
-        },
-        {
-          "internalType": "enum HiveVaultV1.Environments",
-          "name": "environment",
-          "type": "uint8"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        }
-      ],
-      "name": "_lockUpExpirationTimestamp",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "lockUpExpiration",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        }
-      ],
-      "name": "_tokenIdToHiveId",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "hiveId",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "enum HiveVaultV1.Environments",
-          "name": "_environment",
-          "type": "uint8"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_hiveDefense",
-          "type": "uint256"
-        }
-      ],
-      "name": "addHive",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "beeSkills",
-      "outputs": [
-        {
-          "internalType": "contract BeeSkills",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "claim",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "hiveId",
-          "type": "uint256"
-        }
-      ],
-      "name": "deleteHive",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "depositsOf",
-      "outputs": [
-        {
-          "internalType": "uint256[]",
-          "name": "ids",
-          "type": "uint256[]"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "hiveId",
-          "type": "uint256"
-        }
-      ],
-      "name": "getHiveTraits",
-      "outputs": [
-        {
-          "components": [
-            {
-              "internalType": "uint256",
-              "name": "hiveId",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "rateMultiplier",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "numberOfQueensStaked",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "numberOfWorkersStaked",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "hiveDefense",
-              "type": "uint256"
-            },
-            {
-              "internalType": "enum HiveVaultV1.Environments",
-              "name": "environment",
-              "type": "uint8"
-            }
-          ],
-          "internalType": "struct HiveVaultV1.HiveTraits",
-          "name": "",
-          "type": "tuple"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        }
-      ],
-      "name": "onERC721Received",
-      "outputs": [
-        {
-          "internalType": "bytes4",
-          "name": "",
-          "type": "bytes4"
-        }
-      ],
-      "stateMutability": "pure",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "owner",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "pause",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "paused",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "renounceOwnership",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "rewardToken",
-      "outputs": [
-        {
-          "internalType": "contract Honey",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "newEndTime",
-          "type": "uint256"
-        }
-      ],
-      "name": "setEndTime",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "newEpochDuration",
-          "type": "uint256"
-        }
-      ],
-      "name": "setEpochDuration",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "newLockUpDuration",
-          "type": "uint256"
-        }
-      ],
-      "name": "setLockUpDuration",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "newMaxQueensPerHive",
-          "type": "uint256"
-        }
-      ],
-      "name": "setMaxQueensPerHive",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "newMaxWorkersPerHive",
-          "type": "uint256"
-        }
-      ],
-      "name": "setMaxWorkersPerHive",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "newBeeskillsAddress",
-          "type": "address"
-        }
-      ],
-      "name": "setNewBeeskillsAddress",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "newRewardTokenAddress",
-          "type": "address"
-        }
-      ],
-      "name": "setNewRewardTokenAddress",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "newStakingTokenAddress",
-          "type": "address"
-        }
-      ],
-      "name": "setNewStakingAddress",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "newRate",
-          "type": "uint256"
-        }
-      ],
-      "name": "setRate",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "hiveId",
-          "type": "uint256"
-        }
-      ],
-      "name": "stakeBee",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "stakingToken",
-      "outputs": [
-        {
-          "internalType": "contract BuzzkillNFT",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "totalEarned",
-      "outputs": [
-        {
-          "internalType": "uint256[]",
-          "name": "rewards",
-          "type": "uint256[]"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "newOwner",
-          "type": "address"
-        }
-      ],
-      "name": "transferOwnership",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "unpause",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        }
-      ],
-      "name": "unstakeBee",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "updateAllHiveRateMultipliers",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "hiveId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "newRateMultiplier",
-          "type": "uint256"
-        }
-      ],
-      "name": "updateSingleHiveRateMultiplier",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    }
-  ]
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "initialOwner",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "buzzkillNFT",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "honey",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "beeSkills_",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "rate_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxQueensPerHive_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxWorkersPerHive_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "epochDuration_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lockUpDuration_",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "EnforcedPause",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ExpectedPause",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableInvalidOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableUnauthorizedAccount",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ReentrancyGuardReentrantCall",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "nftOwner",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "Claimed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "NFTStaked",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "NFTUnstaked",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "Paused",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "Unpaused",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "hiveId",
+        "type": "uint256"
+      }
+    ],
+    "name": "_hiveIdToHiveTraits",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "hiveId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "rateMultiplier",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "numberOfQueensStaked",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "numberOfWorkersStaked",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "hiveDefense",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum HiveVaultV1.Environments",
+        "name": "environment",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "_lockUpExpirationTimestamp",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "lockUpExpiration",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "_tokenIdToHiveId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "hiveId",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum HiveVaultV1.Environments",
+        "name": "_environment",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_hiveDefense",
+        "type": "uint256"
+      }
+    ],
+    "name": "addHive",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "beeSkills",
+    "outputs": [
+      {
+        "internalType": "contract BeeSkills",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "claim",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "hiveId",
+        "type": "uint256"
+      }
+    ],
+    "name": "deleteHive",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "depositsOf",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "ids",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "hiveId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getHiveTraits",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "hiveId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "rateMultiplier",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "numberOfQueensStaked",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "numberOfWorkersStaked",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hiveDefense",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum HiveVaultV1.Environments",
+            "name": "environment",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct HiveVaultV1.HiveTraits",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "hiveId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getStakedTokensInAHive",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
+    ],
+    "name": "onERC721Received",
+    "outputs": [
+      {
+        "internalType": "bytes4",
+        "name": "",
+        "type": "bytes4"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pause",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "paused",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "rewardToken",
+    "outputs": [
+      {
+        "internalType": "contract Honey",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "newEndTime",
+        "type": "uint256"
+      }
+    ],
+    "name": "setEndTime",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "newEpochDuration",
+        "type": "uint256"
+      }
+    ],
+    "name": "setEpochDuration",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "newLockUpDuration",
+        "type": "uint256"
+      }
+    ],
+    "name": "setLockUpDuration",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "newMaxQueensPerHive",
+        "type": "uint256"
+      }
+    ],
+    "name": "setMaxQueensPerHive",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "newMaxWorkersPerHive",
+        "type": "uint256"
+      }
+    ],
+    "name": "setMaxWorkersPerHive",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newBeeskillsAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setNewBeeskillsAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newRewardTokenAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setNewRewardTokenAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newStakingTokenAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setNewStakingAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "newRate",
+        "type": "uint256"
+      }
+    ],
+    "name": "setRate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "hiveId",
+        "type": "uint256"
+      }
+    ],
+    "name": "stakeBee",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "stakingToken",
+    "outputs": [
+      {
+        "internalType": "contract BuzzkillNFT",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "totalEarned",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "rewards",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "unpause",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "unstakeBee",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "updateAllHiveRateMultipliers",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "hiveId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newRateMultiplier",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateSingleHiveRateMultiplier",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
