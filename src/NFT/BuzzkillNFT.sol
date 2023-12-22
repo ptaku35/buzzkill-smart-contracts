@@ -54,6 +54,7 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     /* -------------------------------------------------------------------------- */
 
     // TODO: Considering adding a uint256 parameter so the user has the option to purchase as many as they want
+        //! Will need to consider using ERC721A for batch minting
     // TODO: Consider best way to handle mint cost
     function mintTo(address to) external payable whenNotPaused nonReentrant returns (uint256) {
         if (msg.sender != owner()) { // Will delete this requirement on mainnet

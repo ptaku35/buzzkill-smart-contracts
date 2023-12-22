@@ -23,7 +23,7 @@ contract HoneyTest is Test {
     }
 
     function testFail_MintToExceedMaxSupply() public {
-        uint256 amount = honey.MAX_SUPPLY() + 1
+        uint256 amount = honey.MAX_SUPPLY() + 1;
         honey.mintTo(user1, amount);
     }
 

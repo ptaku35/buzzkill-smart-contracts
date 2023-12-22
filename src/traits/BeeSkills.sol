@@ -30,9 +30,6 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
     /// @notice Rewards token contract address
     Honey public rewardToken;
 
-    /// @notice Bee traits contract address
-    BeeSkills public beeSkills;
-
     mapping(uint256 tokenId => uint256 lastRaidTime) private _tokenIdToLastRaidTime;
 
     mapping(uint256 tokenId => BeeTraits) public _tokenIdToBeeTraits;
@@ -71,14 +68,13 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
     /*  Constructor                                                               */
     /* -------------------------------------------------------------------------- */
 
-    constructor(address payable owner_, address hiveVault_, address buzzKillNFT, address honey, address beeSkills_)
+    constructor(address payable owner_, address hiveVault_, address buzzKillNFT, address honey)
         Ownable(owner_)
     {
         hiveVault = HiveVaultV1(hiveVault_);
         stakingToken = BuzzkillNFT(buzzKillNFT);
         rewardToken = Honey(honey);
-        beeSkills = BeeSkills(beeSkills_);
-        _pause();
+        // _pause();
     }
 
     /* -------------------------------------------------------------------------- */
@@ -90,6 +86,7 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
         _;
     }
 
+    // TODO: Find another way to get token owner if this is the only usage of stakingToken contract
     modifier onlyTokenOwner(uint256 tokenId) {
         require(msg.sender == stakingToken.ownerOf(tokenId), "Only token owner is authorized for this action");
         _;
