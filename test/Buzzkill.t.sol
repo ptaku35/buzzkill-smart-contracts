@@ -4,9 +4,6 @@ pragma solidity ^0.8.23;
 import {Test, console, StdStorage, stdStorage} from "forge-std/Test.sol";
 import {BuzzkillNFT} from "../src/NFT/BuzzkillNFT.sol";
 
-//! Check Solmate repo for more tests.  Check Patrick repo too: https://github.com/Cyfrin/foundry-nft-f23/blob/main/test/BasicNftTest.t.sol
-//! Can also write a few tests then put the format in ChatGPT and ask it to write more tests.
-//! Check this repo for a ChatGPT prompt example: https://github.com/Cyfrin/foundry-erc20-f23/blob/main/chatGPT_prompt.txt
 
 contract BuzzkillTest is Test {
     using stdStorage for StdStorage;
