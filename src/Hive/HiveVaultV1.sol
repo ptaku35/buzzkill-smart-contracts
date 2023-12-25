@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import {Honey} from "../Honey/Honey.sol";
-import {BuzzkillNFT} from "../NFT/BuzzkillNFT.sol";
-import {BeeSkills} from "../traits/BeeSkills.sol";
+import {IBuzzkillNFT} from "../interfaces/IBuzzkillNFT.sol";
+import {IHoney} from "../interfaces/IHoney.sol";
+import {IBeeSkills} from "../interfaces/IBeeSkills.sol";
 import {Pausable} from "@openzeppelin-contracts/contracts/utils/Pausable.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -71,13 +71,13 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
     // TODO: Consider a transaction fee for withdrawal/claim
 
     /// @notice Staking token contract address
-    BuzzkillNFT public stakingToken;
+    IBuzzkillNFT public stakingToken;
 
     /// @notice Rewards token contract address
-    Honey public rewardToken;
+    IHoney public rewardToken;
 
     /// @notice Bee traits contract address
-    BeeSkills public beeSkills;
+    IBeeSkills public beeSkills;
 
     /// @notice Set of staked token Ids by address
     mapping(address user => EnumerableSet.UintSet stakedTokenIds) private _depositedIds;
@@ -139,9 +139,9 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
         uint256 epochDuration_,
         uint256 lockUpDuration_
     ) Ownable(initialOwner) {
-        stakingToken = BuzzkillNFT(buzzkillNFT);
-        rewardToken = Honey(honey);
-        beeSkills = BeeSkills(beeSkills_);
+        stakingToken = IBuzzkillNFT(buzzkillNFT);
+        rewardToken = IHoney(honey);
+        beeSkills = IBeeSkills(beeSkills_);
         rate = rate_;
         maxWorkersPerHive = maxWorkersPerHive_;
         maxQueensPerHive = maxQueensPerHive_;
@@ -159,6 +159,9 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
     /// @param tokenId The unique identifier of the NFT to be staked.
     /// @param hiveId The ID of the hive where the NFT will be staked.
     function stakeBee(uint256 tokenId, uint256 hiveId) external whenNotPaused returns (bool) {
+        // Add the new deposit to the mapping and check that NFT is not already staked
+        bool success = _depositedIds[msg.sender].add(tokenId);
+        require(success, "NFT already staked");
         require(msg.sender == stakingToken.ownerOf(tokenId), "Error: Only token owner can stake");
         require(hiveId <= currentHiveId && hiveId > 0, "Error: Invalid hive ID");
 
@@ -220,9 +223,6 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
     /// @notice Deposit tokens into the vault
     /// @param tokenId Token to be deposited
     function _deposit(uint256 tokenId) private nonReentrant {
-        // Add the new deposit to the mapping and check that NFT is not already staked
-        bool success = _depositedIds[msg.sender].add(tokenId);
-        require(success, "NFT already staked");
 
         // Set timestamp for tokenId
         _depositedBlocks[tokenId] = block.timestamp;
@@ -388,19 +388,19 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
     /// @notice Set the new staking token contract address
     /// @param newStakingTokenAddress New staking token address
     function setNewStakingAddress(address newStakingTokenAddress) external onlyOwner {
-        stakingToken = BuzzkillNFT(newStakingTokenAddress);
+        stakingToken = IBuzzkillNFT(newStakingTokenAddress);
     }
 
     /// @notice Set the new reward token contract address
     /// @param newRewardTokenAddress New reward token address
     function setNewRewardTokenAddress(address newRewardTokenAddress) external onlyOwner {
-        rewardToken = Honey(newRewardTokenAddress);
+        rewardToken = IHoney(newRewardTokenAddress);
     }
     
     /// @notice Set the new Beeskills contract address
     /// @param newBeeskillsAddress New reward token address
     function setNewBeeskillsAddress(address newBeeskillsAddress) external onlyOwner {
-        beeSkills = BeeSkills(newBeeskillsAddress);
+        beeSkills = IBeeSkills(newBeeskillsAddress);
     }
 
     /// @notice Set new limit for worker bees per hive
