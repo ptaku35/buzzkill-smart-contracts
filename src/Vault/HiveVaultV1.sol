@@ -23,6 +23,11 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
  *  hive they choose. They can claim rewards based on time staked multiplied by
  *  the hive RM. There is a lock-up period for staking. RM is based on the number
  *  of bees in the hive at the end of each epoch.
+ * 
+ *  For mainnet, this approach will be replaced with "hive pools", where each hive
+ *  will have a pool of reward tokens that accumulate over time.  Staked bees will
+ *  be entitled to a percentage of the reward token pool.  Users can "raid" a hive
+ *  to steal tokens from the hive pool.
  */
 
 //
@@ -33,11 +38,9 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
     /*  State Variables                                                           */
     /* -------------------------------------------------------------------------- */
 
-    // TODO: Decide on an appropriate time weighted bonus to give more weight to the amount of time staked
-    // Give more weight to time staked; 10 is just an arbitrary place holder for now
+    /// @notice Give more weight to time staked; 10 is just an arbitrary place holder for now
     uint8 TIME_WEIGHTED_BONUS = 10;
 
-    /// TODO: Appropriately decide the value of a queen to a worker in terms of earning honey
     /// @notice Ratio of the value of a queen to a worker
     uint256 private constant QUEEN_TO_WORKER_RATIO = 5;
 
@@ -68,8 +71,6 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
     /// @notice Set of existing Hive Ids
     EnumerableSet.UintSet private allHiveIds;
 
-    // TODO: Consider a transaction fee for withdrawal/claim
-
     /// @notice Staking token contract address
     IBuzzkillNFT public stakingToken;
 
@@ -88,7 +89,7 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
     /// @notice Mapping of hive to its hive traits
     mapping(uint256 hiveId => HiveTraits hiveTraits) public _hiveIdToHiveTraits;
 
-    // TODO: Add mappping for hive IDs to an array of staked Ids OR replace _tokenIdToHiveId somehow
+    /// @notice Mapping of every staked token in each hive
     mapping(uint256 hiveId => EnumerableSet.UintSet stakedTokenIds) private _hiveIdToStakedTokens;
 
     /// @notice Mapping of staking token to its staked hive
@@ -195,7 +196,6 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
     }
 
     /// @notice Claim pending token rewards
-    ///  TODO: Review this from changing the mapping from user=>tokenID=>timestamp
     function claim() external whenNotPaused nonReentrant {
         uint256 totalRewards;
         uint256 length = _depositedIds[msg.sender].length();
@@ -300,7 +300,6 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
         uint256 queens = hive.numberOfQueensStaked;
         uint256 workers = hive.numberOfWorkersStaked;
         newRateMultiplier = queens * QUEEN_TO_WORKER_RATIO + workers;
-        // TODO: Add level from beeTraits
     }
 
     /* -------------------------------------------------------------------------- */
@@ -468,7 +467,7 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
         _unpause();
     }
 
-    /// @notice allow vault contract (address(this)) to receive ERC721 tokens
+    /// @notice allow vault contract (address(this)) to receive VRC725 tokens
     function onERC721Received(
         address, // operator
         address, // from

@@ -41,8 +41,6 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     /* -------------------------------------------------------------------------- */
 
     constructor(uint256 _mintPrice) {
-        // TODO: Need a modifier here for this and the updateMintPrice function
-        // TODO: Maybe need to consider more strongly about the mint price requirements
         if (_mintPrice < 1 ether) revert MintPriceTooLow(); // ether is just a conversion to 10e18, not literally ether
         if (_mintPrice > 100 ether) revert MintPriceTooHigh();
         __VRC725_init("Buzzkill", "BZK", msg.sender);
@@ -53,14 +51,13 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     /*  Logic Functions                                                           */
     /* -------------------------------------------------------------------------- */
 
-    // TODO: Considering adding a uint256 parameter so the user has the option to purchase as many as they want
-        //! Will need to consider using ERC721A for batch minting
-    // TODO: Consider best way to handle mint cost
+    /// @notice Mints a new token to a specified address
+    /// @param to The address to mint the token to
+    /// @return The tokenId of the newly minted token
     function mintTo(address to) external payable whenNotPaused nonReentrant returns (uint256) {
         if (msg.sender != owner()) { // Will delete this requirement on mainnet
             if (msg.value != mintPrice) revert MintPriceNotPaid();
         }
-
         uint256 newTokenId = ++currentTokenId;
         if (newTokenId > TOTAL_SUPPLY) revert MaxSupplyExceeded();
 
@@ -69,11 +66,17 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
         return newTokenId;
     }
 
+    /// @notice Burns a token with a specified tokenId
+    /// @dev Can only be called by the contract owner
+    /// @param tokenId The tokenId of the token to be burned
     function burn(uint256 tokenId) external onlyOwner {
         require(_exists(tokenId), "Token does not exist");
         _burn(tokenId);
     }
 
+    /// @notice Returns the base URI for the token metadata
+    /// @dev Override to return the custom base URI for this contract
+    /// @return The base URI string
     function _baseURI() internal pure override returns (string memory) {
         return "ipfs://bafybeiayhxazprulpurcaz26y74slp3lfayyeu3n547esianwwpf6ha55e/";
     }
@@ -82,6 +85,9 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     /*  Owner Functions                                                           */
     /* -------------------------------------------------------------------------- */
 
+    /// @notice Withdraws the balance of the contract to a specified payee
+    /// @dev Can only be called by the contract owner; uses a nonReentrant modifier for security
+    /// @param payee The address of the payee to transfer the balance to
     function withdrawPayments(address payable payee) external onlyOwner nonReentrant {
         uint256 balance = address(this).balance;
         (bool transferTx,) = payee.call{value: balance}("");

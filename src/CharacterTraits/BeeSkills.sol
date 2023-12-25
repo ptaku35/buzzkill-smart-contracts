@@ -8,7 +8,17 @@ import {Pausable} from "@openzeppelin-contracts/contracts/utils/Pausable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
+
+/**
+ * @notice This contract is a big work-in-progress.  It will provide the main functionality
+ * of the game mechanics that will allow users to "raid" other hives to try and still honey
+ * tokens as well as upgrade attack and defenses that are used for a probabilistic calculation
+ * to determine a succesful raid.
+ */
+
+
 contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
+    
     /* -------------------------------------------------------------------------- */
     /*  State Variables                                                           */
     /* -------------------------------------------------------------------------- */
@@ -18,6 +28,9 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
 
     /// @notice Cost to raid a hive in Honey
     uint256 public constant RAIDING_COST = 10 ether;
+
+    ///@notice Value of how much more queens are worth in defense than workers
+    uint8 private QUEEN_TO_WORKER_RATIO = 5;
 
     /// @notice Hive contract address
     IHiveVaultV1 hiveVault;
@@ -40,7 +53,6 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
         water
     }
 
-    // TODO: Add level
     struct BeeTraits {
         bool isTraitsInitialized;
         bool isQueen;
@@ -84,7 +96,6 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
         _;
     }
 
-    // TODO: Find another way to get token owner if this is the only usage of stakingToken contract
     modifier onlyTokenOwner(uint256 tokenId) {
         require(msg.sender == stakingToken.ownerOf(tokenId), "Only token owner is authorized for this action");
         _;
@@ -94,6 +105,9 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
     /*  Logic Functions                                                           */
     /* -------------------------------------------------------------------------- */
 
+    /// @notice Upgrades the attack trait of a given token
+    /// @param tokenId The token ID of the bee to upgrade
+    /// @param addAttack The amount of attack to add to the token
     function upgradeAttack(uint256 tokenId, uint256 addAttack)
         external
         onlyIfTraitsInitialized(tokenId)
@@ -104,6 +118,9 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
         _tokenIdToBeeTraits[tokenId].attack += addAttack;
     }
 
+    /// @notice Upgrades the defense trait of a given token
+    /// @param tokenId The token ID of the bee to upgrade
+    /// @param addDefense The amount of defense to add to the token
     function upgradeDefense(uint256 tokenId, uint256 addDefense)
         external
         onlyIfTraitsInitialized(tokenId)
@@ -114,6 +131,9 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
         _tokenIdToBeeTraits[tokenId].defense += addDefense;
     }
 
+    /// @notice Upgrades the foraging trait of a given token
+    /// @param tokenId The token ID of the bee to upgrade
+    /// @param addForaging The amount of foraging ability to add to the token
     function upgradeForaging(uint256 tokenId, uint256 addForaging)
         external
         onlyIfTraitsInitialized(tokenId)
@@ -125,6 +145,10 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
     }
 
     // TODO: Finish raid mechanics
+    /// @notice Conducts a raid on a specified hive using a bee NFT
+    /// @param tokenId The token ID of the raiding bee
+    /// @param hiveId The ID of the hive to be raided
+    /// @return A boolean indicating if the raid was successful
     function raidAHive(uint256 tokenId, uint256 hiveId)
         external
         payable
@@ -142,11 +166,8 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
         // Require owner to have honey to raid
         require(rewardToken.balanceOf(msg.sender) >= RAIDING_COST);
 
-        //! TODO: Need to verify this contract has authority to make transfer, will need proper allowance implementation
         // Transfer raiding cost from user
         rewardToken.transferFrom(msg.sender, owner(), RAIDING_COST);
-
-        // TODO: Update BeeTraits such as cooldown time or energy
 
         // Get traits
         uint256 beeAttack = _tokenIdToBeeTraits[tokenId].attack;
@@ -169,27 +190,36 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
             emit RaidFailed(msg.sender, tokenId, hiveId);
             return true;
         }
-
-        // TODO: Consider a transaction fee for raiding
     }
 
     /* -------------------------------------------------------------------------- */
     /*  Private/Internal Functions                                                */
     /* -------------------------------------------------------------------------- */
 
+    /// @notice Calculates the defense of a hive based on its traits
+    /// @param hiveId The ID of the hive whose defense is being calculated
+    /// @return The calculated defense value of the hive
     function _calculateHiveDefense(uint256 hiveId) private view returns (uint256) {
         IHiveVaultV1.HiveTraits memory hiveTraits = hiveVault.getHiveTraits(hiveId);
         uint256 queens = hiveTraits.numberOfQueensStaked;
         uint256 workers = hiveTraits.numberOfWorkersStaked;
+        return queens * QUEEN_TO_WORKER_RATIO + workers;
     }
 
+    // TODO
+    /// @notice This will calculate the probability of a succesful raid 
     function _calculateIsRaidSuccessful(uint256 attack, uint256 defense) private view returns (bool) {}
     // RN needs to be less than the attack - defense to be successful
 
+    // TODO
+    /// @notice This will calculate how much will be stolen from the hive if raid is succesful
     function _calculateRaidReward() private view returns (uint256) {}
 
+    // TODO
+    /// @notice This will penalize the hive by transferring tokens out based on _calculateRaidReward
     function _penalizeHive() private {}
 
+    // TODO
     function _generateRandomNumber() private view returns (uint256) {
         uint256 randomNumber = uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao)));
         return randomNumber % 100;
@@ -199,21 +229,32 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
     /*  View Functions                                                            */
     /* -------------------------------------------------------------------------- */
 
+    /// @notice Checks if a given token represents a queen bee
+    /// @param tokenId The token ID to check
+    /// @return A boolean indicating if the token is a queen bee
     function getIsQueen(uint256 tokenId) external view returns (bool) {
         return _tokenIdToBeeTraits[tokenId].isQueen;
     }
 
+    /// @notice Get bee traits for a give token Id
     function getBeeTraitsFromTokenId(uint256 tokenId) external view returns (BeeTraits memory) {
         return _tokenIdToBeeTraits[tokenId];
     }
 
-    // TODO:
+    // TODO
+    /// @notice This will verify cooldown status so users cannot spam attacks
     function cooldownStatus(uint256 tokenId) external {}
 
     /* -------------------------------------------------------------------------- */
     /*  Owner Functions                                                           */
     /* -------------------------------------------------------------------------- */
 
+    /// @notice Initializes the traits of a bee token
+    /// @dev This needs to be done for each token
+    /// @param tokenId The token ID of the bee to initialize
+    /// @param _isQueen Indicates if the bee is a queen
+    /// @param _environment The environment of the bee
+    /// @return A boolean indicating if the initialization was successful
     function initializeBeeTraits(uint256 tokenId, bool _isQueen, Environments _environment)
         external
         whenNotPaused
