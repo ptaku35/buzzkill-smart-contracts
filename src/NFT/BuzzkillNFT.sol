@@ -2,8 +2,8 @@
 pragma solidity ^0.8.23;
 
 import {VRC725} from "@vrc725/contracts/VRC725.sol";
-import {Pausable} from "@openzeppelin-contracts/contracts/utils/Pausable.sol";
 import {VRC725Enumerable} from "@vrc725/contracts/extensions/VRC725Enumerable.sol";
+import {Pausable} from "@openzeppelin-contracts/contracts/utils/Pausable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 

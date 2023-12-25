@@ -18,7 +18,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 
 contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
-    
+
     /* -------------------------------------------------------------------------- */
     /*  State Variables                                                           */
     /* -------------------------------------------------------------------------- */
@@ -219,7 +219,6 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
     /// @notice This will penalize the hive by transferring tokens out based on _calculateRaidReward
     function _penalizeHive() private {}
 
-    // TODO
     function _generateRandomNumber() private view returns (uint256) {
         uint256 randomNumber = uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao)));
         return randomNumber % 100;
