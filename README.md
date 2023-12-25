@@ -1,4 +1,4 @@
- <img width="150" height="150" top="100" src="./public/buzzbuzz.png">
+ <img width="1000" height="150" top="150" src="./public/buzzkill-logo-hero.svg">
 
 # BuzzKill NFT Staking Game • ![solidity](https://img.shields.io/badge/solidity-^0.8.23-lightgrey)
 
