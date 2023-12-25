@@ -2,7 +2,7 @@
 pragma solidity ^0.8.23;
 
 import {Test, console, StdStorage, stdStorage} from "forge-std/Test.sol";
-import {Honey} from "../src/Honey/Honey.sol";
+import {Honey} from "../src/RewardToken/Honey.sol";
 
 contract HoneyTest is Test {
     Honey honey;

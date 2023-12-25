@@ -2,9 +2,9 @@
 pragma solidity ^0.8.23;
 
 import {Test, console, StdStorage, stdStorage} from "forge-std/Test.sol";
-import {HiveVaultV1} from "../src/Hive/HiveVaultV1.sol";
+import {HiveVaultV1} from "../src/Vault/HiveVaultV1.sol";
 import {BuzzkillNFT} from "../src/NFT/BuzzkillNFT.sol";
-import {Honey} from "../src/Honey/Honey.sol";
+import {Honey} from "../src/RewardToken/Honey.sol";
 import {IERC721Receiver} from "@vrc725/contracts/interfaces/IERC721Receiver.sol";
 
 
