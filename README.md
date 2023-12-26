@@ -3,10 +3,10 @@
 # BuzzKill NFT Staking Game 🐝 • ![solidity](https://img.shields.io/badge/solidity-^0.8.23-lightgrey)
 
 ## Project Overview
-Welcome to the Beehive NFT Staking Game, a unique blockchain-based game on the Viction chain where players stake bee NFTs in various hives to earn VRC25 honey tokens. This project leverages Ethereum Virtual Machine (EVM) capabilities to create an engaging and rewarding experience for NFT enthusiasts.
+Welcome to the BuzzKill NFT Staking Game, a unique blockchain-based game on the Viction chain where players stake bee NFTs in various hives to earn VRC25 honey tokens. This project leverages Ethereum Virtual Machine (EVM) capabilities to create an engaging and rewarding experience for NFT enthusiasts.
 
 ## Game Mechanics
-In this game, players stake their bee NFTs in different hives. Each hive has unique characteristics that affect the amount of honey tokens players can earn. The longer a bee is staked, the more honey tokens accrue. The variety of hives offers players strategic choices to maximize their rewards.
+Players can stake their bee NFTs in different hives. Each hive has unique characteristics that affect the amount of honey tokens players can earn. The longer a bee is staked, the more honey tokens accrue. The variety of hives offers players strategic choices to maximize their rewards. Other in-game mechanics will include raiding other hives for honey, foraging for resources and constructing new buildings in a hive.
 
 ## Project Structure
 The project is structured into various directories:
