@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.19;
 
 import {VRC25} from "@vrc25/contracts/VRC25.sol";
 import {VRC25Permit} from "@vrc25/contracts/VRC25Permit.sol";

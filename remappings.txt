@@ -1,3 +1,3 @@
-@openzeppelin-contracts/=lib/openzeppelin-contracts/
+@openzeppelin/=lib/openzeppelin-contracts/
 @vrc725/contracts/=lib/vrc725/contracts/
 @vrc25/contracts/=lib/vrc25/contracts/

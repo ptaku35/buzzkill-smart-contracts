@@ -2,7 +2,7 @@
 pragma solidity ^0.8.23;
 
 import {Script, console} from "lib/forge-std/src/Script.sol";
-import {Honey} from "../src/Honey/Honey.sol";
+import {Honey} from "../src/RewardToken/Honey.sol";
 
 contract DeployHoney is Script {
 

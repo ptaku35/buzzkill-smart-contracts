@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.19;
 
 import {IBuzzkillNFT} from "../interfaces/IBuzzkillNFT.sol";
 import {IHiveVaultV1} from "../interfaces/IHiveVaultV1.sol";
 import {IHoney} from "../interfaces/IHoney.sol";
-import {Pausable} from "@openzeppelin-contracts/contracts/utils/Pausable.sol";
+import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 

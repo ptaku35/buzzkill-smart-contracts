@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.19;
 
 import {Script, console} from "lib/forge-std/src/Script.sol";
-import {BeeSkills} from "src/traits/BeeSkills.sol";
+import {BeeSkills} from "src/CharacterTraits/BeeSkills.sol";
 
 contract DeployBeeSkills is Script {
 

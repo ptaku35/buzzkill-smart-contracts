@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.19;
 
 import {Script, console} from "lib/forge-std/src/Script.sol";
-import {HiveVaultV1} from "../src/Hive/HiveVaultV1.sol";
-import {HiveVaultV1Basic} from "../src/Hive/HiveVaultV1Basic.sol";
+import {HiveVaultV1} from "../src/Vault/HiveVaultV1.sol";
+import {HiveVaultV1Basic} from "../src/Vault/HiveVaultV1Basic.sol";
 
 contract DeployHiveVaultV1 is Script {
 
