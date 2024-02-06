@@ -33,7 +33,7 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     /* State Variables                                                            */
     /* -------------------------------------------------------------------------- */
     uint256 public currentTokenId;
-    uint256 public constant TOTAL_SUPPLY = 10_000;
+    uint256 public constant MAX_SUPPLY = 10_000;
     uint256 public mintPrice;
 
     /* -------------------------------------------------------------------------- */
@@ -59,7 +59,7 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
             if (msg.value != mintPrice) revert MintPriceNotPaid();
         }
         uint256 newTokenId = ++currentTokenId;
-        if (newTokenId > TOTAL_SUPPLY) revert MaxSupplyExceeded();
+        if (newTokenId > MAX_SUPPLY) revert MaxSupplyExceeded();
 
         _safeMint(to, newTokenId);
 
