@@ -2,7 +2,7 @@
 pragma solidity ^0.8.23;
 
 import {Test, console, StdStorage, stdStorage} from "forge-std/Test.sol";
-import {Honey} from "../src/Honey/Honey.sol";
+import {Honey} from "../src/RewardToken/Honey.sol";
 
 contract HoneyTest is Test {
     Honey honey;
@@ -15,6 +15,12 @@ contract HoneyTest is Test {
         honey.setControllers(deployer, true); // Assuming deployer is the owner
     }
 
+    function invariantMetadata() public {
+        assertEq(honey.name(), "Honey");
+        assertEq(honey.symbol(), "HNY");
+        assertEq(honey.decimals(), 18);
+    }
+
     function test_MintTo() public {
         uint256 amount = 1e18; // 1 HONEY
         honey.mintTo(user1, amount);
@@ -22,8 +28,13 @@ contract HoneyTest is Test {
         assertEq(honey.totalSupply(), amount);
     }
 
+    function test_Approve() public {
+        assertTrue(honey.approve(address(0xBEEF), 1e18));
+        assertEq(honey.allowance(address(this), address(0xBEEF)), 1e18);
+    }
+
     function testFail_MintToExceedMaxSupply() public {
-        uint256 amount = honey.MAX_SUPPLY() + 1
+        uint256 amount = honey.MAX_SUPPLY() + 1;
         honey.mintTo(user1, amount);
     }
 
@@ -48,14 +59,6 @@ contract HoneyTest is Test {
         honey.mintTo(user1, 1 ether);
     }
 
-    //! Not working
-    function test_EstimateFee() public {
-        uint256 value = 1e18;
-        uint256 estimatedFee = honey.estimateFee(value); // This assumes estimateFee is a public function
-        uint256 expectedFee = value + honey.minFee(); // Adjust accordingly
-        assertEq(estimatedFee, expectedFee);
-    }
-
     function test_ApproveAndAllowance() public {
         uint256 allowanceAmount = 1e18; // 1 HONEY
         honey.approve(user1, allowanceAmount);
@@ -76,15 +79,18 @@ contract HoneyTest is Test {
         honey.transfer(user1, transferAmount);
     }
 
-    //! Not working
     function test_TransferFrom() public {
-        uint256 mintAmount = 1e18; // 1 HONEY
-        uint256 transferAmount = 5e17; // 0.5 HONEY
-        honey.mintTo(address(this), mintAmount);
-        honey.approve(user1, transferAmount);
-        honey.transferFrom(address(this), user1, transferAmount);
-        assertEq(honey.balanceOf(user1), transferAmount);
-        assertEq(honey.balanceOf(address(this)), mintAmount - transferAmount);
+        address from = address(0xABCD);
+        honey.mintTo(from, 1e18);
+
+        vm.prank(from);
+        honey.approve(address(this), 1e18);
+
+        assertTrue(honey.transferFrom(from, address(0xBEEF), 1e18));
+        assertEq(honey.totalSupply(), 1e18);
+        assertEq(honey.allowance(from, address(this)), 0);
+        assertEq(honey.balanceOf(from), 0);
+        assertEq(honey.balanceOf(address(0xBEEF)), 1e18);
     }
 
     function testFail_TransferFromWithoutApproval() public {

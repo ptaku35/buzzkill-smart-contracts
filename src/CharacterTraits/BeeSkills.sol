@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import {HiveVaultV1} from "../Hive/HiveVaultV1.sol";
-import {Honey} from "../Honey/Honey.sol";
-import {BuzzkillNFT} from "../NFT/BuzzkillNFT.sol";
-import {BeeSkills} from "../traits/BeeSkills.sol";
+import {IBuzzkillNFT} from "../interfaces/IBuzzkillNFT.sol";
+import {IHiveVaultV1} from "../interfaces/IHiveVaultV1.sol";
+import {IHoney} from "../interfaces/IHoney.sol";
 import {Pausable} from "@openzeppelin-contracts/contracts/utils/Pausable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
@@ -20,18 +19,14 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
     /// @notice Cost to raid a hive in Honey
     uint256 public constant RAIDING_COST = 10 ether;
 
-    // TODO: Change all of these to contracts to interfaces
     /// @notice Hive contract address
-    HiveVaultV1 hiveVault;
+    IHiveVaultV1 hiveVault;
 
     /// @notice Staking token contract address
-    BuzzkillNFT public stakingToken;
+    IBuzzkillNFT public stakingToken;
 
     /// @notice Rewards token contract address
-    Honey public rewardToken;
-
-    /// @notice Bee traits contract address
-    BeeSkills public beeSkills;
+    IHoney public rewardToken;
 
     mapping(uint256 tokenId => uint256 lastRaidTime) private _tokenIdToLastRaidTime;
 
@@ -71,14 +66,13 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
     /*  Constructor                                                               */
     /* -------------------------------------------------------------------------- */
 
-    constructor(address payable owner_, address hiveVault_, address buzzKillNFT, address honey, address beeSkills_)
+    constructor(address payable owner_, address hiveVault_, address buzzKillNFT, address honey)
         Ownable(owner_)
     {
-        hiveVault = HiveVaultV1(hiveVault_);
-        stakingToken = BuzzkillNFT(buzzKillNFT);
-        rewardToken = Honey(honey);
-        beeSkills = BeeSkills(beeSkills_);
-        _pause();
+        hiveVault = IHiveVaultV1(hiveVault_);
+        stakingToken = IBuzzkillNFT(buzzKillNFT);
+        rewardToken = IHoney(honey);
+        // _pause();
     }
 
     /* -------------------------------------------------------------------------- */
@@ -90,10 +84,11 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
         _;
     }
 
+    // TODO: Find another way to get token owner if this is the only usage of stakingToken contract
     modifier onlyTokenOwner(uint256 tokenId) {
         require(msg.sender == stakingToken.ownerOf(tokenId), "Only token owner is authorized for this action");
         _;
-    }
+    } 
 
     /* -------------------------------------------------------------------------- */
     /*  Logic Functions                                                           */
@@ -129,7 +124,7 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
         _tokenIdToBeeTraits[tokenId].foraging += addForaging;
     }
 
-    // TODO:
+    // TODO: Finish raid mechanics
     function raidAHive(uint256 tokenId, uint256 hiveId)
         external
         payable
@@ -176,33 +171,23 @@ contract BeeSkills is Ownable, Pausable, ReentrancyGuard {
         }
 
         // TODO: Consider a transaction fee for raiding
-
-        // Future Iterations:
-        // VRF
-        // Allocate some honey to wallet and HivePool
-        // Luck powerup - pay for powerup, increases raid success probability
-        // Account for Hive or bee environment
     }
 
     /* -------------------------------------------------------------------------- */
     /*  Private/Internal Functions                                                */
     /* -------------------------------------------------------------------------- */
 
-    // TODO:
     function _calculateHiveDefense(uint256 hiveId) private view returns (uint256) {
-        HiveVaultV1.HiveTraits memory hiveTraits = hiveVault.getHiveTraits(hiveId);
+        IHiveVaultV1.HiveTraits memory hiveTraits = hiveVault.getHiveTraits(hiveId);
         uint256 queens = hiveTraits.numberOfQueensStaked;
         uint256 workers = hiveTraits.numberOfWorkersStaked;
     }
 
-    // TODO:
     function _calculateIsRaidSuccessful(uint256 attack, uint256 defense) private view returns (bool) {}
     // RN needs to be less than the attack - defense to be successful
 
-    // TODO:
     function _calculateRaidReward() private view returns (uint256) {}
 
-    // TODO:
     function _penalizeHive() private {}
 
     function _generateRandomNumber() private view returns (uint256) {

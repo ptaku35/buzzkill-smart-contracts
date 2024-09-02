@@ -1,13 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import {Honey} from "../Honey/Honey.sol";
+import {IHoney} from "../interfaces/IHoney.sol";
 import {BuzzkillNFT} from "../NFT/BuzzkillNFT.sol";
 import {Pausable} from "@openzeppelin-contracts/contracts/utils/Pausable.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+
+/**
+ * @notice This is just here for reference.  It's the initial implementation
+ * of the vault contract.  The vault contract has been upgraded beyond just 
+ * this simple logic.  Therefore, this contract is not being used but only
+ * stands as a reference as the original vault contract.  Refer to HiveVaultV1
+ * for the vault implementation
+ */
+
 
 /// @title Hive Vault
 contract HiveVaultV1Basic is Ownable, Pausable, ReentrancyGuard {
@@ -27,7 +36,7 @@ contract HiveVaultV1Basic is Ownable, Pausable, ReentrancyGuard {
     BuzzkillNFT public stakingToken;
 
     /// @notice Rewards token contract address
-    Honey public rewardToken;
+    IHoney public rewardToken;
 
     /// @notice Set of staked token Ids by address
     mapping(address user => EnumerableSet.UintSet stakedTokens) internal _depositedIds;
@@ -49,9 +58,8 @@ contract HiveVaultV1Basic is Ownable, Pausable, ReentrancyGuard {
         Ownable(initialOwner)
     {
         stakingToken = BuzzkillNFT(buzzkillNFT);
-        rewardToken = Honey(honey);
+        rewardToken = IHoney(honey);
         rate = initialRewardsRate;
-        _pause();
     }
 
     /* -------------------------------------------------------------------------- */
@@ -179,7 +187,7 @@ contract HiveVaultV1Basic is Ownable, Pausable, ReentrancyGuard {
     /// @notice Set the new reward token contract address
     /// @param newRewardTokenAddress New reward token address
     function setNewRewardTokenAddress(address newRewardTokenAddress) external onlyOwner {
-        rewardToken = Honey(newRewardTokenAddress);
+        rewardToken = IHoney(newRewardTokenAddress);
     }
 
     /// @notice Pause the contract.

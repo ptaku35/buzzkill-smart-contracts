@@ -46,9 +46,28 @@ endif
 deployBuzzkill:
 	@forge script script/DeployBuzzkill.s.sol:DeployBuzzkill $(NETWORK_ARGS)
 
+deployHoney:
+	@forge script script/DeployHoney.s.sol:DeployHoney $(NETWORK_ARGS)
+
+deployHiveVault:
+	@forge script script/DeployHiveVault.s.sol:DeployHiveVaultV1 $(NETWORK_ARGS)
+
+deployBeeSkills:
+	@forge script script/DeployBeeSkills.s.sol:DeployBeeSkills $(NETWORK_ARGS)
+
 mint:
-	@forge script script/Interactions.s.sol:MintBasicNft $(NETWORK_ARGS)
+	@forge script script/interactions.s.sol:MintNFT $(NETWORK_ARGS)
 
 # These two commands are the exact same:
 # $ forge script script/DeployBuzzkill.s.sol:DeployBuzzkill --rpc-url $TOMO_RPC_URL --private-key $PRIVATE_KEY --legacy --broadcast --verify --etherscan-api-key $(VICTION_API_KEY) -vvvv
 # $ make deployBuzzkill ARGS="--network tomochain"
+
+# Minting
+# cast send 0x1a8987e126B572c3De795180A86fCAb643543f92 "mintTo(address)" <To address> --private-key 0xac361b57907c5f34bfaef8dc2edb52d0cc68a0388e0d3afe0336db761dea26ec --rpc-url https://rpc.testnet.tomochain.com --value 1ether --legacy
+
+# Cast call example
+# cast call <CALLING CONTRACT ADDRESS> <FUNCTION SIG> <ARGUMENTS> <RPC URL> --legacy
+# cast call 0x1a8987e126B572c3De795180A86fCAb643543f92 "ownerOf(uint256)" 2 --rpc-url https://rpc.testnet.tomochain.com --legacy
+# Cast send example
+# cast send <CALLING CONTRACT ADDRESS> <FUNCTION SIG> <ARGUMENTS> <RPC URL> <PRIVATE KEY> --legacy
+# cast send 0x9f2ae804Ae4A496A4F71ae16a509A67a151Ab787 "setControllers(address, bool)" 0x637D7Ea1f3271cC58DBBbC5585F24D26a9010931 true --rpc-url $TOMO_RPC_URL --private-key $PRIVATE_KEY --legacy

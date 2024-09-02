@@ -6,6 +6,7 @@ import {Pausable} from "@openzeppelin-contracts/contracts/utils/Pausable.sol";
 import {VRC725Enumerable} from "@vrc725/contracts/extensions/VRC725Enumerable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
+
 // 888888b.   888     888 8888888888P 8888888888P 888    d8P  8888888 888      888
 // 888  "88b  888     888       d88P        d88P  888   d8P     888   888      888
 // 888  .88P  888     888      d88P        d88P   888  d8P      888   888      888
@@ -15,7 +16,10 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 // 888   d88P Y88b. .d88P  d88P        d88P       888   Y88b    888   888      888
 // 8888888P"   "Y88888P"  d8888888888 d8888888888 888    Y88b 8888888 88888888 88888888
 
+
+
 contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
+
     /* -------------------------------------------------------------------------- */
     /*  Errors                                                                    */
     /* -------------------------------------------------------------------------- */
@@ -39,8 +43,8 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     constructor(uint256 _mintPrice) {
         // TODO: Need a modifier here for this and the updateMintPrice function
         // TODO: Maybe need to consider more strongly about the mint price requirements
-        if (_mintPrice < 0.00044 ether) revert MintPriceTooLow();
-        if (_mintPrice > 5 ether) revert MintPriceTooHigh();
+        if (_mintPrice < 1 ether) revert MintPriceTooLow(); // ether is just a conversion to 10e18, not literally ether
+        if (_mintPrice > 100 ether) revert MintPriceTooHigh();
         __VRC725_init("Buzzkill", "BZK", msg.sender);
         mintPrice = _mintPrice;
     }
@@ -50,6 +54,7 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     /* -------------------------------------------------------------------------- */
 
     // TODO: Considering adding a uint256 parameter so the user has the option to purchase as many as they want
+        //! Will need to consider using ERC721A for batch minting
     // TODO: Consider best way to handle mint cost
     function mintTo(address to) external payable whenNotPaused nonReentrant returns (uint256) {
         if (msg.sender != owner()) { // Will delete this requirement on mainnet
@@ -69,9 +74,8 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
         _burn(tokenId);
     }
 
-    // TODO: Add base URI
     function _baseURI() internal pure override returns (string memory) {
-        return "ipfs://<SOME HASH HERE>/";
+        return "ipfs://bafybeiayhxazprulpurcaz26y74slp3lfayyeu3n547esianwwpf6ha55e/";
     }
 
     /* -------------------------------------------------------------------------- */
@@ -105,11 +109,6 @@ contract BuzzkillNFT is VRC725, VRC725Enumerable, ReentrancyGuard, Pausable {
     /* -------------------------------------------------------------------------- */
     /*  Required Overrides                                                        */
     /* -------------------------------------------------------------------------- */
-
-    /// @dev Required override from VRC725.
-    function _estimateFee(uint256) internal view override returns (uint256) {
-        return minFee();
-    }
 
     // The following functions are overrides required by Solidity.
 

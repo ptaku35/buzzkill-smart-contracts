@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import {Honey} from "../Honey/Honey.sol";
-import {BuzzkillNFT} from "../NFT/BuzzkillNFT.sol";
-import {BeeSkills} from "../traits/BeeSkills.sol";
+import {IBuzzkillNFT} from "../interfaces/IBuzzkillNFT.sol";
+import {IHoney} from "../interfaces/IHoney.sol";
+import {IBeeSkills} from "../interfaces/IBeeSkills.sol";
 import {Pausable} from "@openzeppelin-contracts/contracts/utils/Pausable.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {IERC721Receiver} from "@vrc725/contracts/interfaces/IERC721Receiver.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /**
  * @title HiveVaultV1
@@ -71,13 +71,13 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
     // TODO: Consider a transaction fee for withdrawal/claim
 
     /// @notice Staking token contract address
-    BuzzkillNFT public stakingToken;
+    IBuzzkillNFT public stakingToken;
 
     /// @notice Rewards token contract address
-    Honey public rewardToken;
+    IHoney public rewardToken;
 
     /// @notice Bee traits contract address
-    BeeSkills public beeSkills;
+    IBeeSkills public beeSkills;
 
     /// @notice Set of staked token Ids by address
     mapping(address user => EnumerableSet.UintSet stakedTokenIds) private _depositedIds;
@@ -87,6 +87,9 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
 
     /// @notice Mapping of hive to its hive traits
     mapping(uint256 hiveId => HiveTraits hiveTraits) public _hiveIdToHiveTraits;
+
+    // TODO: Add mappping for hive IDs to an array of staked Ids OR replace _tokenIdToHiveId somehow
+    mapping(uint256 hiveId => EnumerableSet.UintSet stakedTokenIds) private _hiveIdToStakedTokens;
 
     /// @notice Mapping of staking token to its staked hive
     mapping(uint256 tokenId => uint256 hiveId) public _tokenIdToHiveId;
@@ -136,16 +139,16 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
         uint256 epochDuration_,
         uint256 lockUpDuration_
     ) Ownable(initialOwner) {
-        stakingToken = BuzzkillNFT(buzzkillNFT);
-        rewardToken = Honey(honey);
-        beeSkills = BeeSkills(beeSkills_);
+        stakingToken = IBuzzkillNFT(buzzkillNFT);
+        rewardToken = IHoney(honey);
+        beeSkills = IBeeSkills(beeSkills_);
         rate = rate_;
         maxWorkersPerHive = maxWorkersPerHive_;
         maxQueensPerHive = maxQueensPerHive_;
         epochDuration = epochDuration_;
         lockUpDuration = lockUpDuration_;
         currentEpochTimestamp = block.timestamp;
-        _pause();
+        // _pause();
     }
 
     /* -------------------------------------------------------------------------- */
@@ -156,14 +159,17 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
     /// @param tokenId The unique identifier of the NFT to be staked.
     /// @param hiveId The ID of the hive where the NFT will be staked.
     function stakeBee(uint256 tokenId, uint256 hiveId) external whenNotPaused returns (bool) {
+        // Add the new deposit to the mapping and check that NFT is not already staked
+        bool success = _depositedIds[msg.sender].add(tokenId);
+        require(success, "NFT already staked");
         require(msg.sender == stakingToken.ownerOf(tokenId), "Error: Only token owner can stake");
         require(hiveId <= currentHiveId && hiveId > 0, "Error: Invalid hive ID");
 
         _tokenIdToHiveId[tokenId] = hiveId;
         _lockUpExpirationTimestamp[tokenId] = block.timestamp + lockUpDuration;
+        _hiveIdToStakedTokens[hiveId].add(tokenId);
         _updateBeeCountInHive(hiveId, beeSkills.getIsQueen(tokenId), true);
 
-        //! TODO: Consider authorization of transferring NFT
         _deposit(tokenId);
         return true;
     }
@@ -176,13 +182,15 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
         require(_depositedIds[msg.sender].contains(tokenId), "Error: Not token owner or NFT not staked");
         require(_lockUpExpired(tokenId), "Lock-up period not expired");
 
-        _updateBeeCountInHive(_tokenIdToHiveId[tokenId], beeSkills.getIsQueen(tokenId), false);
+        uint256 hiveId = _tokenIdToHiveId[tokenId];
+
+        _updateBeeCountInHive(hiveId, beeSkills.getIsQueen(tokenId), false);
+        _hiveIdToStakedTokens[hiveId].remove(tokenId);
         delete _tokenIdToHiveId[tokenId];
         _depositedIds[msg.sender].remove(tokenId);
         delete _depositedBlocks[tokenId];
 
         _withdraw(tokenId);
-
         return true;
     }
 
@@ -215,14 +223,11 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
     /// @notice Deposit tokens into the vault
     /// @param tokenId Token to be deposited
     function _deposit(uint256 tokenId) private nonReentrant {
-        // Add the new deposit to the mapping and check that NFT is not already staked
-        bool success = _depositedIds[msg.sender].add(tokenId);
-        require(success, "NFT already staked");
+
         // Set timestamp for tokenId
         _depositedBlocks[tokenId] = block.timestamp;
-        // Transfer the deposited token to this contract
 
-        //! TODO: Consider authorization of transferring NFT
+        // Transfer the deposited token to this contract
         stakingToken.safeTransferFrom(msg.sender, address(this), tokenId);
 
         emit NFTStaked(msg.sender, tokenId, block.timestamp);
@@ -234,6 +239,7 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
         // Calculate rewards
         uint256 totalRewards;
         totalRewards = _earned(_depositedBlocks[tokenId], tokenId);
+        
         //Transfer NFT and reward tokens
         stakingToken.safeTransferFrom(address(this), msg.sender, tokenId);
         rewardToken.mintTo(msg.sender, totalRewards);
@@ -329,6 +335,20 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
         return _hiveIdToHiveTraits[hiveId];
     }
 
+    /// @notice Get all the token Ids staked in a hive
+    /// @dev Need to retrieve a list of staked tokens in a hive for the frontend display
+    /// @param hiveId Hive to retrieve all token IDs staked
+    function getStakedTokensInAHive(uint256 hiveId) external view returns(uint256[] memory) {
+        uint256 length = _hiveIdToStakedTokens[hiveId].length();
+        uint256[] memory stakedTokens = new uint256[](length);
+
+        for (uint256 i = 0; i < length; i++) {
+            stakedTokens[i] = _hiveIdToStakedTokens[hiveId].at(i);
+        }
+
+        return stakedTokens;
+    }
+
     /* -------------------------------------------------------------------------- */
     /*  Owner Functions                                                           */
     /* -------------------------------------------------------------------------- */
@@ -368,13 +388,19 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
     /// @notice Set the new staking token contract address
     /// @param newStakingTokenAddress New staking token address
     function setNewStakingAddress(address newStakingTokenAddress) external onlyOwner {
-        stakingToken = BuzzkillNFT(newStakingTokenAddress);
+        stakingToken = IBuzzkillNFT(newStakingTokenAddress);
     }
 
     /// @notice Set the new reward token contract address
     /// @param newRewardTokenAddress New reward token address
     function setNewRewardTokenAddress(address newRewardTokenAddress) external onlyOwner {
-        rewardToken = Honey(newRewardTokenAddress);
+        rewardToken = IHoney(newRewardTokenAddress);
+    }
+    
+    /// @notice Set the new Beeskills contract address
+    /// @param newBeeskillsAddress New reward token address
+    function setNewBeeskillsAddress(address newBeeskillsAddress) external onlyOwner {
+        beeSkills = IBeeSkills(newBeeskillsAddress);
     }
 
     /// @notice Set new limit for worker bees per hive
@@ -444,18 +470,9 @@ contract HiveVaultV1 is IERC721Receiver, Ownable, Pausable, ReentrancyGuard {
 
     /// @notice allow vault contract (address(this)) to receive ERC721 tokens
     function onERC721Received(
-        address,
-        /**
-         * operator
-         */
-        address,
-        /**
-         * from
-         */
-        uint256,
-        /**
-         * amount
-         */
+        address, // operator
+        address, // from
+        uint256, // amount
         bytes calldata //data
     ) external pure override returns (bytes4) {
         return IERC721Receiver.onERC721Received.selector;

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.23;
 
 import {Test, console, StdStorage, stdStorage} from "forge-std/Test.sol";
-import {BeeSkills} from "../src/traits/BeeSkills.sol";
+import {BeeSkills} from "../src/CharacterTraits/BeeSkills.sol";
 
 
 contract BeeSkillsTest is Test {
